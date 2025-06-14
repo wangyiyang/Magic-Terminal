@@ -1,0 +1,105 @@
+name: Platform Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  GO_VERSION: '1.23.0'
+
+jobs:
+  test-platforms:
+    name: Test on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go-version: ['1.23.0', '1.24.x']
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.go-version }}-go-
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libasound2-dev
+
+      - name: Install macOS dependencies
+        if: matrix.os == 'macos-latest'
+        run: |
+          # Install any macOS specific dependencies if needed
+          echo "macOS dependencies installed"
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests with timeout
+        timeout-minutes: 10
+        run: go test -v -timeout=5m ./...
+
+      - name: Test build
+        run: go build ./cmd/fyneterm
+
+  test-fyne-packaging:
+    name: Test Fyne Packaging
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev
+
+      - name: Install Fyne tools
+        run: go install fyne.io/tools/cmd/fyne@latest
+
+      - name: Test Fyne packaging
+        working-directory: cmd/fyneterm
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            fyne package -os linux
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            fyne package -os darwin
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            fyne package -os windows
+          fi
+
+      - name: List generated files
+        run: |
+          echo "Generated files:"
+          find . -name "Magic Terminal*" -o -name "*.app" -o -name "*.exe" -o -name "*.tar.gz" | head -10

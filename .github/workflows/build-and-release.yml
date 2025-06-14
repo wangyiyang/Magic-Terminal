@@ -1,0 +1,320 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'v0.1.0'
+
+env:
+  GO_VERSION: '1.23.0'
+  APP_NAME: 'magic-terminal'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev
+
+      - name: Run tests
+        run: go test -v ./...
+
+  build:
+    name: Build Artifacts
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            suffix: ''
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            suffix: ''
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            suffix: ''
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            suffix: ''
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            suffix: '.exe'
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Linux dependencies
+        if: matrix.goos == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev
+
+      - name: Get version
+        id: get_version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          
+          LDFLAGS="-ldflags=-X=main.version=${VERSION} -X=main.buildTime=${BUILD_TIME} -X=main.commitHash=${COMMIT_HASH} -s -w"
+          
+          mkdir -p dist
+          BINARY_NAME="${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
+          
+          go build ${LDFLAGS} -trimpath -o "dist/${BINARY_NAME}" ./cmd/fyneterm
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
+
+  build-gui:
+    name: Build GUI Applications
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            goos: darwin
+            name: macOS
+          - os: windows-latest
+            goos: windows
+            name: Windows
+          - os: ubuntu-latest
+            goos: linux
+            name: Linux
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Linux dependencies
+        if: matrix.goos == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev
+
+      - name: Install Fyne tools
+        run: go install fyne.io/tools/cmd/fyne@latest
+
+      - name: Get version
+        id: get_version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build GUI application
+        run: |
+          cd cmd/fyneterm
+          mkdir -p ../../dist
+          fyne package -os ${{ matrix.goos }}
+          
+          # Move packaged files to dist directory
+          if [[ "${{ matrix.goos }}" == "windows" ]]; then
+            mv "Magic Terminal.exe" "../../dist/Magic-Terminal-${{ matrix.goos }}.exe"
+          elif [[ "${{ matrix.goos }}" == "darwin" ]]; then
+            mv "Magic Terminal.app" "../../dist/"
+            
+            # Create DMG for macOS
+            cd ../../
+            make dmg-background
+            make dmg
+            
+            # Rename DMG with version
+            mv "dist/Magic-Terminal.dmg" "dist/Magic-Terminal-${{ steps.get_version.outputs.version }}.dmg"
+            
+            # Also create tar.gz for compatibility
+            cd dist
+            tar -czf "Magic-Terminal-${{ matrix.goos }}.tar.gz" "Magic Terminal.app"
+            rm -rf "Magic Terminal.app"
+          elif [[ "${{ matrix.goos }}" == "linux" ]]; then
+            mv "Magic Terminal.tar.gz" "../../dist/Magic-Terminal-${{ matrix.goos }}.tar.gz"
+          fi
+
+      - name: Upload GUI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Magic-Terminal-GUI-${{ matrix.name }}
+          path: |
+            dist/Magic-Terminal-${{ matrix.goos }}*
+            dist/Magic-Terminal-*.dmg
+
+  release:
+    name: Create Release
+    needs: [build, build-gui]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release/
+          
+          # Copy binary artifacts
+          find artifacts/ -name "${{ env.APP_NAME }}-*" -type f -exec cp {} release/ \;
+          
+          # Copy GUI artifacts
+          find artifacts/ -name "Magic-Terminal-*" -type f -exec cp {} release/ \;
+          
+          # List all files for debugging
+          ls -la release/
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## Magic Terminal ${{ steps.get_version.outputs.version }}
+          
+          ### 🚀 Features
+          - Cross-platform terminal emulator built with Fyne
+          - Support for Linux, macOS, and Windows
+          - Modern UI with customizable themes
+          
+          ### 📦 Downloads
+          
+          **Command Line Binaries:**
+          - Linux (amd64): `magic-terminal-linux-amd64`
+          - Linux (arm64): `magic-terminal-linux-arm64`
+          - macOS (amd64): `magic-terminal-darwin-amd64`
+          - macOS (arm64): `magic-terminal-darwin-arm64`
+          - Windows (amd64): `magic-terminal-windows-amd64.exe`
+          
+          **GUI Applications:**
+          - macOS: `Magic-Terminal-darwin.tar.gz` (contains .app bundle)
+          - Windows: `Magic-Terminal-windows.exe`
+          - Linux: `Magic-Terminal-linux.tar.gz`
+          
+          ### 🔧 Installation
+          
+          **Command Line:**
+          1. Download the appropriate binary for your platform
+          2. Make it executable: `chmod +x magic-terminal-*`
+          3. Run: `./magic-terminal-*`
+          
+          **GUI Application:**
+          1. Download the GUI package for your platform
+          2. Extract (if needed) and run the application
+          
+          ### 📝 Changelog
+          
+          See the commits since the last release for detailed changes.
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: Magic Terminal ${{ steps.get_version.outputs.version }}
+          body_path: release_notes.md
+          files: release/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update latest release
+        if: github.event_name == 'push'
+        run: |
+          echo "Release ${{ steps.get_version.outputs.version }} has been created!"
+          echo "Download artifacts at: https://github.com/${{ github.repository }}/releases/tag/${{ steps.get_version.outputs.version }}"
