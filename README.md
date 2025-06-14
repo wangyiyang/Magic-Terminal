@@ -1,14 +1,17 @@
 <p align="center">
-  <a href="https://goreportcard.com/report/github.com/wangyiyang/Magic-Terminal"><img src="https://goreportcard.com/badge/github.com/wangyiyang/Magic-Terminal" alt="Code Status" /></a>
-  <a href="https://github.com/wangyiyang/Magic-Terminal/actions"><img src="https://github.com/wangyiyang/Magic-Terminal/workflows/Platform%20Tests/badge.svg" alt="Build Status" /></a>
-  <a href='https://coveralls.io/github/wangyiyang/Magic-Terminal?branch=master'><img src='https://coveralls.io/repos/github/wangyiyang/Magic-Terminal/badge.svg?branch=master' alt='Coverage Status' /></a>
-  <a href='http://gophers.slack.com/messages/fyne'><img src='https://img.shields.io/badge/join-us%20on%20slack-gray.svg?longCache=true&logo=slack&colorB=blue' alt='Join us on Slack' /></a>
+  <a href="https://goreportcard.com/report/github.com/wangyiyang/Magic-Terminal"><img src="https://goreportcard.com/badge/github.com/wangyiyang/Magic-Terminal" alt="Go Report Card" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/actions"><img src="https://github.com/wangyiyang/Magic-Terminal/actions/workflows/build.yml/badge.svg" alt="Build Status" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/releases"><img src="https://img.shields.io/github/v/release/wangyiyang/Magic-Terminal?style=flat-square" alt="Latest Release" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/blob/main/LICENSE"><img src="https://img.shields.io/github/license/wangyiyang/Magic-Terminal?style=flat-square" alt="License" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal"><img src="https://img.shields.io/github/stars/wangyiyang/Magic-Terminal?style=flat-square" alt="GitHub Stars" /></a>
 </p>
 
 # Magic Terminal
 
 A terminal emulator using the Fyne toolkit, supports Linux, macOS, Windows and BSD.
 Based on [fyne-io/terminal](https://github.com/fyne-io/terminal) with additional features and enhancements.
+
+**[中文文档](README_zh.md) | English**
 
 Running on Linux with a custom zsh theme.
 <img alt="screenshot" src="img/linux.png" width="929" />
