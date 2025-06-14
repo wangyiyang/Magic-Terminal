@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://goreportcard.com/report/github.com/wangyiyang/Magic-Terminal"><img src="https://goreportcard.com/badge/github.com/wangyiyang/Magic-Terminal" alt="Go Report Card" /></a>
-  <a href="https://github.com/wangyiyang/Magic-Terminal/actions"><img src="https://github.com/wangyiyang/Magic-Terminal/actions/workflows/build.yml/badge.svg" alt="Build Status" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/actions"><img src="https://github.com/wangyiyang/Magic-Terminal/actions/workflows/platform_tests.yml/badge.svg" alt="Platform Tests" /></a>
   <a href="https://github.com/wangyiyang/Magic-Terminal/releases"><img src="https://img.shields.io/github/v/release/wangyiyang/Magic-Terminal?style=flat-square" alt="Latest Release" /></a>
   <a href="https://github.com/wangyiyang/Magic-Terminal/blob/main/LICENSE"><img src="https://img.shields.io/github/license/wangyiyang/Magic-Terminal?style=flat-square" alt="License" /></a>
   <a href="https://github.com/wangyiyang/Magic-Terminal"><img src="https://img.shields.io/github/stars/wangyiyang/Magic-Terminal?style=flat-square" alt="GitHub Stars" /></a>
