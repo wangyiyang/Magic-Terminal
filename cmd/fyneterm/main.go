@@ -6,8 +6,8 @@ import (
 	"image/color"
 	"runtime"
 
-	"github.com/fyne-io/terminal"
-	"github.com/fyne-io/terminal/cmd/fyneterm/data"
+	terminal "github.com/wangyiyang/Magic-Terminal"
+	"github.com/wangyiyang/Magic-Terminal/cmd/fyneterm/data"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"

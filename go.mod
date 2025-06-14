@@ -1,4 +1,4 @@
-module github.com/fyne-io/terminal
+module github.com/wangyiyang/Magic-Terminal
 
 go 1.19
 

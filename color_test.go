@@ -8,8 +8,8 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
-	widget2 "github.com/fyne-io/terminal/internal/widget"
 	"github.com/stretchr/testify/assert"
+	widget2 "github.com/wangyiyang/Magic-Terminal/internal/widget"
 )
 
 func esc(s string) string {

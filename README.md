@@ -1,13 +1,14 @@
 <p align="center">
-  <a href="https://goreportcard.com/report/github.com/fyne-io/terminal"><img src="https://goreportcard.com/badge/github.com/fyne-io/terminal" alt="Code Status" /></a>
-  <a href="https://github.com/fyne-io/terminal/actions"><img src="https://github.com/fyne-io/terminal/workflows/Platform%20Tests/badge.svg" alt="Build Status" /></a>
-  <a href='https://coveralls.io/github/fyne-io/terminal?branch=master'><img src='https://coveralls.io/repos/github/fyne-io/terminal/badge.svg?branch=master' alt='Coverage Status' /></a>
+  <a href="https://goreportcard.com/report/github.com/wangyiyang/Magic-Terminal"><img src="https://goreportcard.com/badge/github.com/wangyiyang/Magic-Terminal" alt="Code Status" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/actions"><img src="https://github.com/wangyiyang/Magic-Terminal/workflows/Platform%20Tests/badge.svg" alt="Build Status" /></a>
+  <a href='https://coveralls.io/github/wangyiyang/Magic-Terminal?branch=master'><img src='https://coveralls.io/repos/github/wangyiyang/Magic-Terminal/badge.svg?branch=master' alt='Coverage Status' /></a>
   <a href='http://gophers.slack.com/messages/fyne'><img src='https://img.shields.io/badge/join-us%20on%20slack-gray.svg?longCache=true&logo=slack&colorB=blue' alt='Join us on Slack' /></a>
 </p>
 
-# Fyne Terminal
+# Magic Terminal
 
 A terminal emulator using the Fyne toolkit, supports Linux, macOS, Windows and BSD.
+Based on [fyne-io/terminal](https://github.com/fyne-io/terminal) with additional features and enhancements.
 
 Running on Linux with a custom zsh theme.
 <img alt="screenshot" src="img/linux.png" width="929" />
@@ -23,7 +24,7 @@ Running on Windows with PowerShell running inside.
 Just use the go get command (you'll need a Go and C compiler installed first):
 
 ```
-go install github.com/fyne-io/terminal/cmd/fyneterm@latest
+go install github.com/wangyiyang/Magic-Terminal/cmd/fyneterm@latest
 ```
 
 # Installing as an app
@@ -33,7 +34,7 @@ use the `fyne` tool, as illustrated below:
 
 ```
 $ go get fyne.io/fyne/v2/cmd/fyne
-$ fyne get github.com/fyne-io/terminal/cmd/fyneterm
+$ fyne get github.com/wangyiyang/Magic-Terminal/cmd/fyneterm
 ```
 
 # TODO
@@ -49,7 +50,7 @@ Already planned is:
 # Library
 
 You can also use this project as a library to create your own
-terminal based applications, using the import path "github.com/fyne-io/terminal".
+terminal based applications, using the import path "github.com/wangyiyang/Magic-Terminal".
 
 There are two modes, using the default shell or connecting to a remote shell.
 

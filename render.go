@@ -6,7 +6,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/theme"
-	widget2 "github.com/fyne-io/terminal/internal/widget"
+	widget2 "github.com/wangyiyang/Magic-Terminal/internal/widget"
 )
 
 const cursorWidth = 2

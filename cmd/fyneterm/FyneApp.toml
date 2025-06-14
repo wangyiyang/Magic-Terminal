@@ -1,10 +1,10 @@
 [Details]
   Icon = "data/Icon.png"
-  Name = "FyneTerm"
-  ID = "io.fyne.terminal"
+  Name = "Magic Terminal"
+  ID = "com.wangyiyang.magicterminal"
 
 [Source]
-  Repo = "https://github.com/fyne-io/terminal"
+  Repo = "https://github.com/wangyiyang/Magic-Terminal"
   Dir = "cmd/fyneterm"
 
 [Migrations]

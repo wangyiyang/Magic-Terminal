@@ -2,7 +2,7 @@ package terminal
 
 import (
 	"fyne.io/fyne/v2"
-	widget2 "github.com/fyne-io/terminal/internal/widget"
+	widget2 "github.com/wangyiyang/Magic-Terminal/internal/widget"
 )
 
 // getSelectedRange returns the current selection range, start row, start col, end row, end col
