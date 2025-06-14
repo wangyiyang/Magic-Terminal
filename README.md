@@ -113,3 +113,34 @@ For example to open a terminal to an SSH connection that you have created:
  w.SetContent(t)
  w.ShowAndRun()
 ```
+
+## License
+
+Magic Terminal is released under the BSD 3-Clause License. See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+Magic Terminal is based on the [fyne-io/terminal](https://github.com/fyne-io/terminal) project. 
+We gratefully acknowledge the original authors and the Fyne.io development team for creating 
+the foundation upon which this enhanced terminal emulator is built.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, 
+please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Support
+
+- 📚 [Documentation](docs/CI-CD.md)
+- 🐛 [Issue Tracker](https://github.com/wangyiyang/Magic-Terminal/issues)
+- 💬 [Discussions](https://github.com/wangyiyang/Magic-Terminal/discussions)
+
+---
+
+© 2025 Wang Yiyang (Magic Terminal). Based on fyne-io/terminal © 2021 Fyne.io developers.

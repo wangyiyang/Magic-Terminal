@@ -148,14 +148,32 @@ go build ./cmd/fyneterm
 go test ./...
 ```
 
-## 贡献
-
-欢迎贡献！请随时提交 issue 或 pull request。
-
 ## 许可证
 
-此项目基于与原始 fyne-io/terminal 项目相同的许可证。
+Magic Terminal 基于 BSD 3-Clause 许可证发布。详细信息请查看 [LICENSE](LICENSE) 文件。
 
 ## 致谢
 
-感谢 [fyne-io/terminal](https://github.com/fyne-io/terminal) 项目提供的基础代码和灵感。
+Magic Terminal 基于 [fyne-io/terminal](https://github.com/fyne-io/terminal) 项目开发。
+我们诚挚感谢原始作者和 Fyne.io 开发团队，感谢他们为创建这个增强版终端模拟器
+奠定了坚实的基础。
+
+## 贡献
+
+欢迎贡献！请随时提交 Pull Request。对于重大更改，请先开启 issue 讨论您想要更改的内容。
+
+1. Fork 该仓库
+2. 创建您的功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启一个 Pull Request
+
+## 支持
+
+* 📚 [文档](docs/CI-CD.md)
+* 🐛 [问题跟踪](https://github.com/wangyiyang/Magic-Terminal/issues)
+* 💬 [讨论区](https://github.com/wangyiyang/Magic-Terminal/discussions)
+
+---
+
+© 2025 Wang Yiyang (Magic Terminal)。基于 fyne-io/terminal © 2021 Fyne.io developers。

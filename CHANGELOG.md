@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-platform binary building (Linux, macOS, Windows)
 - GUI application packaging for all platforms
 - Release automation scripts
+- macOS DMG installer creation and packaging
+- Comprehensive build system with Makefile
+- Code quality checks with golangci-lint
+- Test coverage reporting
+- Security scanning with gosec
+- AUTHORS file with contributor information
+- Updated LICENSE with dual copyright (Magic Terminal + original fyne-io/terminal)
 - Code quality checks with golangci-lint
 - Test coverage reporting
 - Security scanning with gosec
