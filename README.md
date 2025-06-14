@@ -36,8 +36,8 @@ To get the app installed alongside your other applications (with metadata, icons
 use the `fyne` tool, as illustrated below:
 
 ```
-$ go get fyne.io/fyne/v2/cmd/fyne
-$ fyne get github.com/wangyiyang/Magic-Terminal/cmd/fyneterm
+go get fyne.io/fyne/v2/cmd/fyne
+fyne get github.com/wangyiyang/Magic-Terminal/cmd/fyneterm
 ```
 
 # TODO
@@ -64,17 +64,17 @@ on Windows, it always uses PowerShell) use the `RunLocalShell` method after crea
 a `Terminal`, as follows:
 
 ```go
-	// run new terminal and close app on terminal exit.
-	t := terminal.New()
-	go func() {
-		_ = t.RunLocalShell()
-		log.Printf("Terminal's shell exited with exit code: %d", t.ExitCode())
-		a.Quit()
-	}()
+ // run new terminal and close app on terminal exit.
+ t := terminal.New()
+ go func() {
+  _ = t.RunLocalShell()
+  log.Printf("Terminal's shell exited with exit code: %d", t.ExitCode())
+  a.Quit()
+ }()
 
-	// w is a fyne.Window created to hold the content
-	w.SetContent(t)
-	w.ShowAndRun()
+ // w is a fyne.Window created to hold the content
+ w.SetContent(t)
+ w.ShowAndRun()
 ```
 
 ## Remote connection
@@ -82,34 +82,34 @@ a `Terminal`, as follows:
 For example to open a terminal to an SSH connection that you have created:
 
 ```go
-	// session is an *ssh.Session from golang.org/x/crypto/ssh
-	in, _ := session.StdinPipe()
-	out, _ := session.StdoutPipe()
-	go session.Run("$SHELL || bash")
+ // session is an *ssh.Session from golang.org/x/crypto/ssh
+ in, _ := session.StdinPipe()
+ out, _ := session.StdoutPipe()
+ go session.Run("$SHELL || bash")
 
-	// run new terminal and close app on terminal exit.
-	t := terminal.New()
-	go func() {
-		_ = t.RunWithConnection(in, out)
-		a.Quit()
-	}()
+ // run new terminal and close app on terminal exit.
+ t := terminal.New()
+ go func() {
+  _ = t.RunWithConnection(in, out)
+  a.Quit()
+ }()
 
-	// OPTIONAL: dynamically resize the terminal session
-	ch := make(chan terminal.Config)
-	go func() {
-		rows, cols := uint(0), uint(0)
-		for {
-			config := <-ch
-			if rows == config.Rows && cols == config.Columns {
-				continue
-			}
-			rows, cols = config.Rows, config.Columns
-			session.WindowChange(int(rows), int(cols))
-		}
-	}()
-	t.AddListener(ch)
+ // OPTIONAL: dynamically resize the terminal session
+ ch := make(chan terminal.Config)
+ go func() {
+  rows, cols := uint(0), uint(0)
+  for {
+   config := <-ch
+   if rows == config.Rows && cols == config.Columns {
+    continue
+   }
+   rows, cols = config.Rows, config.Columns
+   session.WindowChange(int(rows), int(cols))
+  }
+ }()
+ t.AddListener(ch)
 
-	// w is a fyne.Window created to hold the content
-	w.SetContent(t)
-	w.ShowAndRun()
+ // w is a fyne.Window created to hold the content
+ w.SetContent(t)
+ w.ShowAndRun()
 ```

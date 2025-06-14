@@ -36,8 +36,8 @@ go install github.com/wangyiyang/Magic-Terminal/cmd/fyneterm@latest
 请使用 `fyne` 工具，如下所示：
 
 ```bash
-$ go get fyne.io/fyne/v2/cmd/fyne
-$ fyne get github.com/wangyiyang/Magic-Terminal/cmd/fyneterm
+go get fyne.io/fyne/v2/cmd/fyne
+fyne get github.com/wangyiyang/Magic-Terminal/cmd/fyneterm
 ```
 
 # 待办事项
@@ -64,17 +64,17 @@ $ fyne get github.com/wangyiyang/Magic-Terminal/cmd/fyneterm
 如下所示：
 
 ```go
-	// 运行新终端并在终端退出时关闭应用程序
-	t := terminal.New()
-	go func() {
-		_ = t.RunLocalShell()
-		log.Printf("终端 shell 退出，退出代码：%d", t.ExitCode())
-		a.Quit()
-	}()
+ // 运行新终端并在终端退出时关闭应用程序
+ t := terminal.New()
+ go func() {
+  _ = t.RunLocalShell()
+  log.Printf("终端 shell 退出，退出代码：%d", t.ExitCode())
+  a.Quit()
+ }()
 
-	// w 是创建用于保存内容的 fyne.Window
-	w.SetContent(t)
-	w.ShowAndRun()
+ // w 是创建用于保存内容的 fyne.Window
+ w.SetContent(t)
+ w.ShowAndRun()
 ```
 
 ## 远程连接
@@ -82,55 +82,55 @@ $ fyne get github.com/wangyiyang/Magic-Terminal/cmd/fyneterm
 例如，打开一个到您已创建的 SSH 连接的终端：
 
 ```go
-	// session 是来自 golang.org/x/crypto/ssh 的 *ssh.Session
-	in, _ := session.StdinPipe()
-	out, _ := session.StdoutPipe()
-	go session.Run("$SHELL || bash")
+ // session 是来自 golang.org/x/crypto/ssh 的 *ssh.Session
+ in, _ := session.StdinPipe()
+ out, _ := session.StdoutPipe()
+ go session.Run("$SHELL || bash")
 
-	// 运行新终端并在终端退出时关闭应用程序
-	t := terminal.New()
-	go func() {
-		_ = t.RunWithConnection(in, out)
-		a.Quit()
-	}()
+ // 运行新终端并在终端退出时关闭应用程序
+ t := terminal.New()
+ go func() {
+  _ = t.RunWithConnection(in, out)
+  a.Quit()
+ }()
 
-	// 可选：动态调整终端会话大小
-	ch := make(chan terminal.Config)
-	go func() {
-		rows, cols := uint(0), uint(0)
-		for {
-			config := <-ch
-			if rows == config.Rows && cols == config.Columns {
-				continue
-			}
-			rows, cols = config.Rows, config.Columns
-			session.WindowChange(int(rows), int(cols))
-		}
-	}()
-	t.AddListener(ch)
+ // 可选：动态调整终端会话大小
+ ch := make(chan terminal.Config)
+ go func() {
+  rows, cols := uint(0), uint(0)
+  for {
+   config := <-ch
+   if rows == config.Rows && cols == config.Columns {
+    continue
+   }
+   rows, cols = config.Rows, config.Columns
+   session.WindowChange(int(rows), int(cols))
+  }
+ }()
+ t.AddListener(ch)
 
-	// w 是创建用于保存内容的 fyne.Window
-	w.SetContent(t)
-	w.ShowAndRun()
+ // w 是创建用于保存内容的 fyne.Window
+ w.SetContent(t)
+ w.ShowAndRun()
 ```
 
 ## 特性
 
-- 🚀 **跨平台支持**：支持 Linux、macOS、Windows 和 BSD
-- 🎨 **现代 UI**：基于 Fyne 工具包的美观界面
-- ⚡ **高性能**：优化的终端渲染和响应
-- 🔧 **可自定义**：支持主题和配置自定义
-- 📚 **库模式**：可作为库集成到其他项目中
-- 🌐 **远程连接**：支持 SSH 等远程连接
+* 🚀 **跨平台支持**：支持 Linux、macOS、Windows 和 BSD
+* 🎨 **现代 UI**：基于 Fyne 工具包的美观界面
+* ⚡ **高性能**：优化的终端渲染和响应
+* 🔧 **可自定义**：支持主题和配置自定义
+* 📚 **库模式**：可作为库集成到其他项目中
+* 🌐 **远程连接**：支持 SSH 等远程连接
 
 ## 构建要求
 
-- Go 1.19 或更高版本
-- C 编译器（gcc 或 clang）
-- 平台特定的依赖项：
-  - Linux：X11 开发库
-  - macOS：Xcode 命令行工具
-  - Windows：MinGW-w64 或 Visual Studio
+* Go 1.19 或更高版本
+* C 编译器（gcc 或 clang）
+* 平台特定的依赖项：
+  * Linux：X11 开发库
+  * macOS：Xcode 命令行工具
+  * Windows：MinGW-w64 或 Visual Studio
 
 ## 开发
 
