@@ -135,7 +135,8 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Install Gosec
+        run: go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+
       - name: Run Gosec Security Scanner
-        uses: securecodewarrior/github-action-gosec@master
-        with:
-          args: ./...
+        run: gosec ./...
