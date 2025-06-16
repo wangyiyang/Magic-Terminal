@@ -2,7 +2,7 @@ module github.com/wangyiyang/Magic-Terminal
 
 go 1.23.0
 
-toolchain go1.24.2
+toolchain go1.24.1
 
 require (
 	fyne.io/fyne/v2 v2.6.1-0.20250429164240-9ef40b18cdac
