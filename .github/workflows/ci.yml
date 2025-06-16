@@ -138,7 +138,7 @@ jobs:
       - name: Run Gosec Security Scanner
         run: |
           # Download and extract Gosec binary
-          wget https://github.com/securecodewarrior/gosec/releases/download/v2.21.4/gosec_2.21.4_linux_amd64.tar.gz
-          tar -xzf gosec_2.21.4_linux_amd64.tar.gz
+          wget https://github.com/securego/gosec/releases/download/v2.22.4/gosec_2.22.4_linux_amd64.tar.gz
+          tar -xzf gosec_2.22.4_linux_amd64.tar.gz
           chmod +x gosec
           ./gosec ./...
