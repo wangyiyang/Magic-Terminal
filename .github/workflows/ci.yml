@@ -135,8 +135,10 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Install Gosec
-        run: go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-
       - name: Run Gosec Security Scanner
-        run: gosec ./...
+        run: |
+          # Download and extract Gosec binary
+          wget https://github.com/securecodewarrior/gosec/releases/download/v2.21.4/gosec_2.21.4_linux_amd64.tar.gz
+          tar -xzf gosec_2.21.4_linux_amd64.tar.gz
+          chmod +x gosec
+          ./gosec ./...
