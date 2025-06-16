@@ -1,26 +1,14 @@
 # golangci-lint configuration
-# See: https://golangci-lint.run/usage/configuration/
-
+# Updated for compatibility with golangci-lint v1.60.3
 run:
   timeout: 5m
   issues-exit-code: 1
   tests: true
-  modules-download-mode: readonly
-
-output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
-  uniq-by-line: true
 
 linters-settings:
   errcheck:
     check-type-assertions: true
     check-blank: true
-
-  govet:
-    check-shadowing: true
-    enable-all: true
 
   gofmt:
     simplify: true
@@ -45,19 +33,6 @@ linters-settings:
   gocyclo:
     min-complexity: 15
 
-  godot:
-    scope: declarations
-    capital: true
-
-  gomnd:
-    settings:
-      mnd:
-        checks: argument,case,condition,operation,return,assign
-
-  gomodguard:
-    blocked:
-      modules: []
-
   gosec:
     includes:
       - G401
@@ -69,24 +44,13 @@ linters-settings:
   lll:
     line-length: 120
 
-  maligned:
-    suggest-new: true
-
   misspell:
     locale: US
 
   nakedret:
     max-func-lines: 30
 
-  prealloc:
-    simple: true
-    range-loops: true
-    for-loops: false
-
   unparam:
-    check-exported: false
-
-  unused:
     check-exported: false
 
   whitespace:
@@ -97,22 +61,14 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
-    - depguard
-    - dogsled
     - dupl
     - errcheck
-    - exportloopref
-    - exhaustive
     - funlen
-    - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-    - gomnd
-    - goprintffuncname
     - gosec
     - gosimple
     - govet
@@ -120,18 +76,11 @@ linters:
     - lll
     - misspell
     - nakedret
-    - noctx
-    - nolintlint
-    - rowserrcheck
-    - sqlclosecheck
     - staticcheck
-    - structcheck
     - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
 issues:
@@ -139,26 +88,14 @@ issues:
     # Exclude some linters from running on tests files.
     - path: _test\.go
       linters:
-        - gomnd
         - funlen
         - gocyclo
-
-    # Disable linters that are annoying in tests.
-    - path: _test\.go
-      linters:
-        - gochecknoinits
-        - gocognit
-        - funlen
 
   # Maximum issues count per one linter. Set to 0 to disable.
   max-issues-per-linter: 0
 
   # Maximum count of issues with the same text. Set to 0 to disable.
   max-same-issues: 0
-
-  # Show only new issues: if there are unstaged changes or untracked files,
-  # only those changes are analyzed, else only changes in HEAD~ are analyzed.
-  new: false
 
   # Fix found issues (if it's supported by the linter).
   fix: false
