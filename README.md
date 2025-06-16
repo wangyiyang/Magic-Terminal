@@ -1,14 +1,17 @@
 <p align="center">
-  <a href="https://goreportcard.com/report/github.com/wangyiyang/Magic-Terminal"><img src="https://goreportcard.com/badge/github.com/wangyiyang/Magic-Terminal" alt="Code Status" /></a>
-  <a href="https://github.com/wangyiyang/Magic-Terminal/actions"><img src="https://github.com/wangyiyang/Magic-Terminal/workflows/Platform%20Tests/badge.svg" alt="Build Status" /></a>
-  <a href='https://coveralls.io/github/wangyiyang/Magic-Terminal?branch=master'><img src='https://coveralls.io/repos/github/wangyiyang/Magic-Terminal/badge.svg?branch=master' alt='Coverage Status' /></a>
-  <a href='http://gophers.slack.com/messages/fyne'><img src='https://img.shields.io/badge/join-us%20on%20slack-gray.svg?longCache=true&logo=slack&colorB=blue' alt='Join us on Slack' /></a>
+  <a href="https://goreportcard.com/report/github.com/wangyiyang/Magic-Terminal"><img src="https://goreportcard.com/badge/github.com/wangyiyang/Magic-Terminal" alt="Go Report Card" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/actions"><img src="https://github.com/wangyiyang/Magic-Terminal/actions/workflows/platform_tests.yml/badge.svg" alt="Platform Tests" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/releases"><img src="https://img.shields.io/github/v/release/wangyiyang/Magic-Terminal?style=flat-square" alt="Latest Release" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/blob/main/LICENSE"><img src="https://img.shields.io/github/license/wangyiyang/Magic-Terminal?style=flat-square" alt="License" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal"><img src="https://img.shields.io/github/stars/wangyiyang/Magic-Terminal?style=flat-square" alt="GitHub Stars" /></a>
 </p>
 
 # Magic Terminal
 
 A terminal emulator using the Fyne toolkit, supports Linux, macOS, Windows and BSD.
 Based on [fyne-io/terminal](https://github.com/fyne-io/terminal) with additional features and enhancements.
+
+**[中文文档](README_zh.md) | English**
 
 Running on Linux with a custom zsh theme.
 <img alt="screenshot" src="img/linux.png" width="929" />
@@ -33,8 +36,8 @@ To get the app installed alongside your other applications (with metadata, icons
 use the `fyne` tool, as illustrated below:
 
 ```
-$ go get fyne.io/fyne/v2/cmd/fyne
-$ fyne get github.com/wangyiyang/Magic-Terminal/cmd/fyneterm
+go get fyne.io/fyne/v2/cmd/fyne
+fyne get github.com/wangyiyang/Magic-Terminal/cmd/fyneterm
 ```
 
 # TODO
@@ -61,17 +64,17 @@ on Windows, it always uses PowerShell) use the `RunLocalShell` method after crea
 a `Terminal`, as follows:
 
 ```go
-	// run new terminal and close app on terminal exit.
-	t := terminal.New()
-	go func() {
-		_ = t.RunLocalShell()
-		log.Printf("Terminal's shell exited with exit code: %d", t.ExitCode())
-		a.Quit()
-	}()
+ // run new terminal and close app on terminal exit.
+ t := terminal.New()
+ go func() {
+  _ = t.RunLocalShell()
+  log.Printf("Terminal's shell exited with exit code: %d", t.ExitCode())
+  a.Quit()
+ }()
 
-	// w is a fyne.Window created to hold the content
-	w.SetContent(t)
-	w.ShowAndRun()
+ // w is a fyne.Window created to hold the content
+ w.SetContent(t)
+ w.ShowAndRun()
 ```
 
 ## Remote connection
@@ -79,34 +82,65 @@ a `Terminal`, as follows:
 For example to open a terminal to an SSH connection that you have created:
 
 ```go
-	// session is an *ssh.Session from golang.org/x/crypto/ssh
-	in, _ := session.StdinPipe()
-	out, _ := session.StdoutPipe()
-	go session.Run("$SHELL || bash")
+ // session is an *ssh.Session from golang.org/x/crypto/ssh
+ in, _ := session.StdinPipe()
+ out, _ := session.StdoutPipe()
+ go session.Run("$SHELL || bash")
 
-	// run new terminal and close app on terminal exit.
-	t := terminal.New()
-	go func() {
-		_ = t.RunWithConnection(in, out)
-		a.Quit()
-	}()
+ // run new terminal and close app on terminal exit.
+ t := terminal.New()
+ go func() {
+  _ = t.RunWithConnection(in, out)
+  a.Quit()
+ }()
 
-	// OPTIONAL: dynamically resize the terminal session
-	ch := make(chan terminal.Config)
-	go func() {
-		rows, cols := uint(0), uint(0)
-		for {
-			config := <-ch
-			if rows == config.Rows && cols == config.Columns {
-				continue
-			}
-			rows, cols = config.Rows, config.Columns
-			session.WindowChange(int(rows), int(cols))
-		}
-	}()
-	t.AddListener(ch)
+ // OPTIONAL: dynamically resize the terminal session
+ ch := make(chan terminal.Config)
+ go func() {
+  rows, cols := uint(0), uint(0)
+  for {
+   config := <-ch
+   if rows == config.Rows && cols == config.Columns {
+    continue
+   }
+   rows, cols = config.Rows, config.Columns
+   session.WindowChange(int(rows), int(cols))
+  }
+ }()
+ t.AddListener(ch)
 
-	// w is a fyne.Window created to hold the content
-	w.SetContent(t)
-	w.ShowAndRun()
+ // w is a fyne.Window created to hold the content
+ w.SetContent(t)
+ w.ShowAndRun()
 ```
+
+## License
+
+Magic Terminal is released under the BSD 3-Clause License. See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+Magic Terminal is based on the [fyne-io/terminal](https://github.com/fyne-io/terminal) project. 
+We gratefully acknowledge the original authors and the Fyne.io development team for creating 
+the foundation upon which this enhanced terminal emulator is built.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, 
+please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Support
+
+- 📚 [Documentation](docs/CI-CD.md)
+- 🐛 [Issue Tracker](https://github.com/wangyiyang/Magic-Terminal/issues)
+- 💬 [Discussions](https://github.com/wangyiyang/Magic-Terminal/discussions)
+
+---
+
+© 2025 Wang Yiyang (Magic Terminal). Based on fyne-io/terminal © 2021 Fyne.io developers.

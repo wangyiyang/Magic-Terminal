@@ -3,3 +3,9 @@
 
 cmd/fyneterm/fyneterm*
 
+# Makefile 构建产物
+bin/
+dist/
+*.out
+*.html
+

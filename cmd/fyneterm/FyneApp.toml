@@ -2,6 +2,7 @@
   Icon = "data/Icon.png"
   Name = "Magic Terminal"
   ID = "com.wangyiyang.magicterminal"
+  Build = 9
 
 [Source]
   Repo = "https://github.com/wangyiyang/Magic-Terminal"
@@ -9,4 +10,3 @@
 
 [Migrations]
   fyneDo = true
-
