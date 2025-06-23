@@ -3,9 +3,11 @@
 ## Magic Terminal Project
 
 ### Primary Author
+
 - Wang Yiyang <wangyiyang@example.com> - Project maintainer and lead developer
 
 ### Magic Terminal Features and Enhancements
+
 - Cross-platform build system and CI/CD pipeline
 - macOS DMG packaging
 - Enhanced documentation (Chinese and English)
@@ -18,16 +20,18 @@ Magic Terminal is based on the fyne-io/terminal project. We gratefully acknowled
 the original authors and contributors:
 
 ### Original Authors
+
 - The Fyne.io development team
 - All contributors to the fyne-io/terminal project
 
 ### Original Project
-- Repository: https://github.com/fyne-io/terminal
+
+- Repository: <https://github.com/fyne-io/terminal>
 - License: BSD 3-Clause License
 
 ## Acknowledgments
 
-We thank the Fyne.io team and the open source community for creating the 
+We thank the Fyne.io team and the open source community for creating the
 foundation upon which Magic Terminal is built. The original terminal emulator
 provided an excellent starting point for this enhanced version.
 
@@ -39,6 +43,7 @@ guidelines on how to contribute to this project.
 ---
 
 For a complete list of contributors, see the Git commit history:
+
 ```
 git log --format='%aN <%aE>' | sort -u
 ```

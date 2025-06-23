@@ -9,10 +9,12 @@ Magic Terminal 项目配置了完整的 CI/CD 流水线，使用 GitHub Actions 
 ### 1. CI 工作流 (`.github/workflows/ci.yml`)
 
 **触发条件：**
+
 - 推送到 `main` 或 `develop` 分支
 - 对 `main` 或 `develop` 分支的 Pull Request
 
 **功能：**
+
 - 跨平台测试 (Linux, macOS, Windows)
 - 代码质量检查 (golangci-lint)
 - 测试覆盖率报告
@@ -22,10 +24,12 @@ Magic Terminal 项目配置了完整的 CI/CD 流水线，使用 GitHub Actions 
 ### 2. 构建和发布工作流 (`.github/workflows/build-and-release.yml`)
 
 **触发条件：**
+
 - 推送版本标签 (格式: `v*.*.*`)
 - 手动触发 (workflow_dispatch)
 
 **功能：**
+
 - 测试验证
 - 跨平台二进制构建 (Linux/macOS/Windows, amd64/arm64)
 - GUI 应用打包 (使用 Fyne)
@@ -35,11 +39,13 @@ Magic Terminal 项目配置了完整的 CI/CD 流水线，使用 GitHub Actions 
 ### 3. 平台测试工作流 (`.github/workflows/platform-tests.yml`)
 
 **触发条件：**
+
 - 推送到 `main` 分支
 - 对 `main` 分支的 Pull Request
 - 每日定时执行 (UTC 2:00 AM)
 
 **功能：**
+
 - 多 Go 版本测试 (1.23.0, 1.24.x)
 - Fyne 打包测试
 - 深度平台兼容性验证
@@ -81,6 +87,7 @@ make push-tag VERSION=v1.0.0
 每次发布会生成以下制品：
 
 ### 命令行二进制文件
+
 - `magic-terminal-linux-amd64`
 - `magic-terminal-linux-arm64`
 - `magic-terminal-darwin-amd64`
@@ -88,6 +95,7 @@ make push-tag VERSION=v1.0.0
 - `magic-terminal-windows-amd64.exe`
 
 ### GUI 应用程序
+
 - `Magic-Terminal-darwin.tar.gz` (macOS .app 包)
 - `Magic-Terminal-windows.exe` (Windows 可执行文件)
 - `Magic-Terminal-linux.tar.gz` (Linux 应用包)
@@ -138,8 +146,8 @@ make check
 
 ## 监控和日志
 
-- **构建状态**：https://github.com/wangyiyang/Magic-Terminal/actions
-- **发布页面**：https://github.com/wangyiyang/Magic-Terminal/releases
+- **构建状态**：<https://github.com/wangyiyang/Magic-Terminal/actions>
+- **发布页面**：<https://github.com/wangyiyang/Magic-Terminal/releases>
 - **代码覆盖率**：通过 Codecov 报告
 
 ## 故障排除
