@@ -35,7 +35,10 @@ func (t *Terminal) startPTY() (io.WriteCloser, io.Reader, io.Closer, error) {
 		return nil, nil, nil, err
 	}
 
+	t.cmdLock.Lock()
 	t.cmd = &exec.Cmd{}
+	t.cmdLock.Unlock()
+
 	process, err := os.FindProcess(pid)
 	if err != nil {
 		return nil, nil, nil, err
@@ -45,7 +48,11 @@ func (t *Terminal) startPTY() (io.WriteCloser, io.Reader, io.Closer, error) {
 		if err != nil {
 			log.Fatalf("Error waiting for process: %v", err)
 		}
+
+		t.cmdLock.Lock()
 		t.cmd.ProcessState = ps
+		t.cmdLock.Unlock()
+
 		if t.pty != nil {
 			t.pty = nil
 			_ = cpty.Close()

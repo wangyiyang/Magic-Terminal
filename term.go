@@ -51,9 +51,10 @@ type Terminal struct {
 	listeners    []chan Config
 	startDir     string
 
-	pty io.Closer
-	in  io.WriteCloser
-	out io.Reader
+	pty    io.Closer
+	ioLock sync.RWMutex
+	in     io.WriteCloser
+	out    io.Reader
 
 	bell, bold, debug, focused bool
 	currentFG, currentBG       color.Color
@@ -86,7 +87,10 @@ type Terminal struct {
 	blinking               bool
 	printData              []byte
 	printer                Printer
+	cmdLock                sync.RWMutex
 	cmd                    *exec.Cmd
+	exitCode               int
+	hasExited              bool
 	readWriterConfigurator ReadWriterConfigurator
 }
 
@@ -277,10 +281,13 @@ func (t *Terminal) Text() string {
 // Returns -1 if called before shell was started or before shell exited.
 // Also returns -1 if shell was terminated by a signal.
 func (t *Terminal) ExitCode() int {
-	if t.cmd == nil {
+	t.cmdLock.RLock()
+	defer t.cmdLock.RUnlock()
+
+	if !t.hasExited {
 		return -1
 	}
-	return t.cmd.ProcessState.ExitCode()
+	return t.exitCode
 }
 
 // TouchCancel handles the tap action for mobile apps that lose focus during tap.
@@ -322,12 +329,14 @@ func (t *Terminal) open() error {
 		return err
 	}
 
+	t.ioLock.Lock()
 	t.in, t.out = in, out
 	if t.readWriterConfigurator != nil {
 		t.out, t.in = t.readWriterConfigurator.SetupReadWriter(out, in)
 	}
 
 	t.pty = pty
+	t.ioLock.Unlock()
 
 	t.updatePTYSize()
 	return nil
@@ -364,11 +373,27 @@ func (t *Terminal) run() {
 	buf := make([]byte, bufLen)
 	var leftOver []byte
 	for {
-		num, err := t.out.Read(buf)
+		t.ioLock.RLock()
+		out := t.out
+		t.ioLock.RUnlock()
+
+		num, err := out.Read(buf)
 		if err != nil {
-			if t.cmd != nil {
+			t.cmdLock.RLock()
+			cmd := t.cmd
+			t.cmdLock.RUnlock()
+
+			if cmd != nil {
 				// wait for cmd (shell) to exit, populates ProcessState.ExitCode
-				t.cmd.Wait()
+				cmd.Wait()
+
+				// Update the exit code safely
+				t.cmdLock.Lock()
+				if t.cmd == cmd && cmd.ProcessState != nil {
+					t.exitCode = cmd.ProcessState.ExitCode()
+					t.hasExited = true
+				}
+				t.cmdLock.Unlock()
 			}
 			if err == io.EOF || err.Error() == "EOF" {
 				break // term exit on macOS
@@ -433,6 +458,9 @@ func (t *Terminal) RunWithConnection(in io.WriteCloser, out io.Reader) error {
 // Write is used to send commands into an open terminal connection.
 // Errors will be returned if the connection is not established, has closed, or there was a problem in transmission.
 func (t *Terminal) Write(b []byte) (int, error) {
+	t.ioLock.RLock()
+	defer t.ioLock.RUnlock()
+
 	if t.in == nil {
 		return 0, io.EOF
 	}
@@ -478,6 +506,8 @@ func New() *Terminal {
 	t := &Terminal{
 		mouseCursor: desktop.DefaultCursor,
 		in:          discardWriter{},
+		exitCode:    -1,
+		hasExited:   false,
 	}
 	t.ExtendBaseWidget(t)
 
