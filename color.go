@@ -154,6 +154,12 @@ func (t *Terminal) handleColorModeMap(mode, ids string) {
 		id -= 232
 		inc := 256 / 24
 		y := id * inc
+		// Safely convert int to uint8 with bounds checking
+		if y < 0 {
+			y = 0
+		} else if y > 255 {
+			y = 255
+		}
 		c = &color.Gray{uint8(y)}
 	} else if t.debug {
 		log.Println("Invalid colour map ID", id)
@@ -170,6 +176,24 @@ func (t *Terminal) handleColorModeRGB(mode, rs, gs, bs string) {
 	r, _ := strconv.Atoi(rs)
 	g, _ := strconv.Atoi(gs)
 	b, _ := strconv.Atoi(bs)
+
+	// Safely convert int to uint8 with bounds checking
+	if r < 0 {
+		r = 0
+	} else if r > 255 {
+		r = 255
+	}
+	if g < 0 {
+		g = 0
+	} else if g > 255 {
+		g = 255
+	}
+	if b < 0 {
+		b = 0
+	} else if b > 255 {
+		b = 255
+	}
+
 	c := &color.RGBA{uint8(r), uint8(g), uint8(b), 255}
 
 	if mode == "38" {

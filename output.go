@@ -241,7 +241,17 @@ func (t *Terminal) parseOSC(r rune) {
 }
 
 func (t *Terminal) handleOutputChar(r rune) {
-	if t.cursorCol >= int(t.config.Columns) || t.cursorRow >= int(t.config.Rows) {
+	// Safely convert uint to int with bounds checking
+	cols := t.config.Columns
+	if cols > 2147483647 {
+		cols = 2147483647
+	}
+	rows := t.config.Rows
+	if rows > 2147483647 {
+		rows = 2147483647
+	}
+
+	if t.cursorCol >= int(cols) || t.cursorRow >= int(rows) {
 		return // TODO handle wrap?
 	}
 	for len(t.content.Rows)-1 < t.cursorRow {

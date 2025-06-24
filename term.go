@@ -3,6 +3,7 @@ package terminal
 import (
 	"image/color"
 	"io"
+	"log"
 	"math"
 	"os"
 	"os/exec"
@@ -247,10 +248,20 @@ func (t *Terminal) Resize(s fyne.Size) {
 		t.content.Resize(fyne.NewSize(float32(cols)*cellSize.Width, float32(rows)*cellSize.Height))
 	}
 
-	oldRows := int(t.config.Rows)
+	// Safely convert uint to int with bounds checking
+	configRows := t.config.Rows
+	if configRows > 2147483647 {
+		configRows = 2147483647
+	}
+	oldRows := int(configRows)
 	t.config.Columns, t.config.Rows = cols, rows
 	if t.scrollBottom == 0 || t.scrollBottom == oldRows-1 {
-		t.scrollBottom = int(t.config.Rows) - 1
+		// Safely convert uint to int for scrollBottom
+		newRows := t.config.Rows
+		if newRows > 2147483647 {
+			newRows = 2147483647
+		}
+		t.scrollBottom = int(newRows) - 1
 	}
 	t.onConfigure()
 
@@ -385,7 +396,13 @@ func (t *Terminal) run() {
 
 			if cmd != nil {
 				// wait for cmd (shell) to exit, populates ProcessState.ExitCode
-				cmd.Wait()
+				err := cmd.Wait()
+				if err != nil {
+					// Log the error but don't crash the application
+					if t.debug {
+						log.Printf("Error waiting for process: %v", err)
+					}
+				}
 
 				// Update the exit code safely
 				t.cmdLock.Lock()

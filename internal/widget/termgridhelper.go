@@ -255,10 +255,29 @@ func NewTermTextGridStyle(fg, bg color.Color, bitmask byte, blinkEnabled bool) w
 // invertColor inverts a color c with the given bitmask
 func invertColor(c color.Color, bitmask uint8) color.Color {
 	r, g, b, a := c.RGBA()
+
+	// Safely convert uint32 to uint8 with bounds checking
+	rVal := r >> 8
+	if rVal > 255 {
+		rVal = 255
+	}
+	gVal := g >> 8
+	if gVal > 255 {
+		gVal = 255
+	}
+	bVal := b >> 8
+	if bVal > 255 {
+		bVal = 255
+	}
+	aVal := a >> 8
+	if aVal > 255 {
+		aVal = 255
+	}
+
 	return color.RGBA{
-		R: uint8(r>>8) ^ bitmask,
-		G: uint8(g>>8) ^ bitmask,
-		B: uint8(b>>8) ^ bitmask,
-		A: uint8(a >> 8),
+		R: uint8(rVal) ^ bitmask,
+		G: uint8(gVal) ^ bitmask,
+		B: uint8(bVal) ^ bitmask,
+		A: uint8(aVal),
 	}
 }

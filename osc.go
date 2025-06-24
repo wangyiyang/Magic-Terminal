@@ -42,12 +42,20 @@ func (t *Terminal) setDirectory(uri string) {
 			}
 
 		}
-		os.Chdir(uri[off:])
+		err := os.Chdir(uri[off:])
+		if err != nil {
+			// Log the error but don't crash the application
+			log.Printf("Failed to change directory to %s: %v", uri[off:], err)
+		}
 		return
 	}
 
 	// fallback to guessing it's a path
-	os.Chdir(u.Path())
+	err = os.Chdir(u.Path())
+	if err != nil {
+		// Log the error but don't crash the application
+		log.Printf("Failed to change directory to %s: %v", u.Path(), err)
+	}
 }
 
 func (t *Terminal) setTitle(title string) {

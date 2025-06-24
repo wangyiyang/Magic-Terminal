@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"github.com/creack/pty"
@@ -21,15 +22,49 @@ func (t *Terminal) updatePTYSize() {
 	if c != nil {
 		scale = c.Scale()
 	}
+
+	// Safely convert uint to uint16 with bounds checking
+	rows := t.config.Rows
+	if rows > 65535 {
+		rows = 65535
+	}
+	cols := t.config.Columns
+	if cols > 65535 {
+		cols = 65535
+	}
+
+	width := t.Size().Width * scale
+	if width > 65535 {
+		width = 65535
+	}
+	height := t.Size().Height * scale
+	if height > 65535 {
+		height = 65535
+	}
+
 	_ = pty.Setsize(t.pty.(*os.File), &pty.Winsize{
-		Rows: uint16(t.config.Rows), Cols: uint16(t.config.Columns),
-		X: uint16(t.Size().Width * scale), Y: uint16(t.Size().Height * scale)})
+		Rows: uint16(rows), Cols: uint16(cols),
+		X: uint16(width), Y: uint16(height)})
 }
 
 func (t *Terminal) startPTY() (io.WriteCloser, io.Reader, io.Closer, error) {
 	shell := os.Getenv("SHELL")
 	if shell == "" {
 		shell = "bash"
+	}
+
+	// Validate shell path to prevent command injection
+	allowedShells := []string{"bash", "sh", "zsh", "fish", "csh", "tcsh", "ksh"}
+	shellName := filepath.Base(shell)
+	isAllowed := false
+	for _, allowed := range allowedShells {
+		if shellName == allowed {
+			isAllowed = true
+			break
+		}
+	}
+	if !isAllowed {
+		shell = "bash" // fallback to safe default
 	}
 
 	_ = os.Chdir(t.startingDir())

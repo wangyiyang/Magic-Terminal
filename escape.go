@@ -107,16 +107,27 @@ func (t *Terminal) moveCursor(row, col int) {
 	if t.config.Columns == 0 || t.config.Rows == 0 {
 		return
 	}
+
+	// Safely convert uint to int with bounds checking
+	configCols := t.config.Columns
+	if configCols > 2147483647 {
+		configCols = 2147483647
+	}
+	configRows := t.config.Rows
+	if configRows > 2147483647 {
+		configRows = 2147483647
+	}
+
 	if col < 0 {
 		col = 0
-	} else if col >= int(t.config.Columns) {
-		col = int(t.config.Columns) - 1
+	} else if col >= int(configCols) {
+		col = int(configCols) - 1
 	}
 
 	if row < 0 {
 		row = 0
-	} else if row >= int(t.config.Rows) {
-		row = int(t.config.Rows) - 1
+	} else if row >= int(configRows) {
+		row = int(configRows) - 1
 	}
 
 	t.cursorCol = col
@@ -348,7 +359,12 @@ func escapeSaveCursor(t *Terminal, _ string) {
 func escapeSetScrollArea(t *Terminal, msg string) {
 	parts := strings.Split(msg, ";")
 	start := 0
-	end := int(t.config.Rows) - 1
+	// Safely convert uint to int with bounds checking
+	configRows := t.config.Rows
+	if configRows > 2147483647 {
+		configRows = 2147483647
+	}
+	end := int(configRows) - 1
 	if len(parts) == 2 {
 		if parts[0] != "" {
 			start, _ = strconv.Atoi(parts[0])
