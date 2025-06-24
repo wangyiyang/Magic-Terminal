@@ -1,6 +1,8 @@
 <p align="center">
   <a href="https://goreportcard.com/report/github.com/wangyiyang/Magic-Terminal"><img src="https://goreportcard.com/badge/github.com/wangyiyang/Magic-Terminal" alt="Go Report Card" /></a>
-  <a href="https://github.com/wangyiyang/Magic-Terminal/actions"><img src="https://github.com/wangyiyang/Magic-Terminal/actions/workflows/platform_tests.yml/badge.svg" alt="Platform Tests" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/actions/workflows/ci.yml"><img src="https://github.com/wangyiyang/Magic-Terminal/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/wangyiyang/Magic-Terminal/actions/workflows/security.yml"><img src="https://github.com/wangyiyang/Magic-Terminal/actions/workflows/security.yml/badge.svg" alt="Security" /></a>
+  <a href="https://codecov.io/gh/wangyiyang/Magic-Terminal"><img src="https://codecov.io/gh/wangyiyang/Magic-Terminal/branch/main/graph/badge.svg" alt="Coverage" /></a>
   <a href="https://github.com/wangyiyang/Magic-Terminal/releases"><img src="https://img.shields.io/github/v/release/wangyiyang/Magic-Terminal?style=flat-square" alt="Latest Release" /></a>
   <a href="https://github.com/wangyiyang/Magic-Terminal/blob/main/LICENSE"><img src="https://img.shields.io/github/license/wangyiyang/Magic-Terminal?style=flat-square" alt="License" /></a>
   <a href="https://github.com/wangyiyang/Magic-Terminal"><img src="https://img.shields.io/github/stars/wangyiyang/Magic-Terminal?style=flat-square" alt="GitHub Stars" /></a>

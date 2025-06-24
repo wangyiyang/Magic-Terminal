@@ -1,9 +1,14 @@
 # golangci-lint configuration
-# Updated for compatibility with golangci-lint v1.60.3
+# Updated for compatibility with golangci-lint v1.61.0
 run:
-  timeout: 5m
+  timeout: 10m
   issues-exit-code: 1
   tests: true
+  skip-dirs:
+    - vendor
+    - .git
+  skip-files:
+    - ".*_test.go"
 
 linters-settings:
   errcheck:

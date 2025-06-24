@@ -1,0 +1,118 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  GO_VERSION: '1.23'
+
+jobs:
+  quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libasound2-dev
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install analysis tools
+        run: |
+          go install golang.org/x/tools/cmd/goimports@latest
+          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          go install golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow@latest
+
+      - name: Run go vet
+        run: go vet -tags ci ./...
+
+      - name: Check imports formatting
+        run: |
+          if [ "$(goimports -e -d . | wc -l)" -gt 0 ]; then
+            echo "Import formatting issues found:"
+            goimports -e -d .
+            exit 1
+          fi
+
+      - name: Check cyclomatic complexity
+        run: gocyclo -over 15 .
+
+      - name: Run staticcheck
+        run: staticcheck -go 1.23 ./...
+
+      - name: Check for shadowed variables
+        run: shadow ./...
+
+      - name: Verify no vendor directory
+        run: |
+          if [ -d "vendor" ]; then
+            echo "vendor directory should not be committed"
+            exit 1
+          fi
+
+      - name: Check for potential issues
+        run: |
+          # Check for TODO/FIXME comments
+          if grep -r "TODO\|FIXME" --include="*.go" . ; then
+            echo "Found TODO/FIXME comments - consider addressing them"
+          fi
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install godoc
+        run: go install golang.org/x/tools/cmd/godoc@latest
+
+      - name: Check documentation coverage
+        run: |
+          # Check for package documentation
+          find . -name "*.go" -not -path "./vendor/*" -not -path "./.git/*" | \
+          while read file; do
+            if ! grep -q "^// Package" "$file" && grep -q "^package" "$file"; then
+              echo "Missing package documentation in $file"
+            fi
+          done
+
+      - name: Validate README
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "README.md is missing"
+            exit 1
+          fi
+          
+          if [ ! -f "README_zh.md" ]; then
+            echo "README_zh.md is missing"
+            exit 1
+          fi

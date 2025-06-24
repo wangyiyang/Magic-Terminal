@@ -10,9 +10,13 @@ on:
         description: 'Release version (e.g., v1.0.0)'
         required: true
         default: 'v0.1.0'
+      draft:
+        description: 'Create as draft release'
+        type: boolean
+        default: false
 
 env:
-  GO_VERSION: '1.23.0'
+  GO_VERSION: '1.23'
   APP_NAME: 'magic-terminal'
 
 jobs:

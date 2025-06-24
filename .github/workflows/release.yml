@@ -1,0 +1,168 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
+        type: string
+
+env:
+  GO_VERSION: '1.23'
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Simple changelog generation
+          if [ -f "CHANGELOG.md" ]; then
+            # Extract changelog for this version
+            awk '/^## \['"${VERSION#v}"'\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md > release_notes.md
+          else
+            echo "Release ${{ steps.get_version.outputs.version }}" > release_notes.md
+            echo "" >> release_notes.md
+            git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md
+          fi
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: ${{ steps.get_version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.version, '-') }}
+
+  build-and-upload:
+    name: Build and Upload
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            suffix: ''
+            name: 'Linux x64'
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            suffix: ''
+            name: 'Linux ARM64'
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            suffix: ''
+            name: 'macOS Intel'
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            suffix: ''
+            name: 'macOS Apple Silicon'
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            suffix: '.exe'
+            name: 'Windows x64'
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install Linux dependencies
+        if: matrix.goos == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libasound2-dev
+
+      - name: Install macOS dependencies
+        if: matrix.goos == 'darwin'
+        run: |
+          # macOS dependencies are usually built-in
+          echo "macOS build environment ready"
+
+      - name: Install Windows dependencies
+        if: matrix.goos == 'windows'
+        run: |
+          # Windows dependencies for Fyne
+          echo "Windows build environment ready"
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
+        run: |
+          BINARY_NAME="magic-terminal-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
+          VERSION="${{ needs.create-release.outputs.version }}"
+          BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          
+          go build \
+            -ldflags "-w -s -X main.version=${VERSION} -X main.buildTime=${BUILD_TIME} -X main.commitHash=${COMMIT_HASH}" \
+            -o "${BINARY_NAME}" \
+            ./cmd/fyneterm
+
+      - name: Create archive
+        id: archive
+        run: |
+          BINARY_NAME="magic-terminal-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
+          ARCHIVE_NAME="magic-terminal-${{ matrix.goos }}-${{ matrix.goarch }}"
+          
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            zip "${ARCHIVE_NAME}.zip" "${BINARY_NAME}" README.md LICENSE
+            echo "asset_path=${ARCHIVE_NAME}.zip" >> $GITHUB_OUTPUT
+            echo "asset_name=${ARCHIVE_NAME}.zip" >> $GITHUB_OUTPUT
+          else
+            tar -czf "${ARCHIVE_NAME}.tar.gz" "${BINARY_NAME}" README.md LICENSE
+            echo "asset_path=${ARCHIVE_NAME}.tar.gz" >> $GITHUB_OUTPUT
+            echo "asset_name=${ARCHIVE_NAME}.tar.gz" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ steps.archive.outputs.asset_path }}
+          asset_name: ${{ steps.archive.outputs.asset_name }}
+          asset_content_type: application/octet-stream
