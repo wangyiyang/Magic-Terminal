@@ -93,8 +93,8 @@ func newTerminalWindow(a fyne.App, debug bool) fyne.Window {
 	w.Canvas().Focus(t)
 
 	newTerm := func(_ fyne.Shortcut) {
-		w := newTerminalWindow(a, debug)
-		w.Show()
+		newW := newTerminalWindow(a, debug)
+		newW.Show()
 	}
 	t.AddShortcut(&desktop.CustomShortcut{KeyName: fyne.KeyN, Modifier: fyne.KeyModifierControl | fyne.KeyModifierShift}, newTerm)
 	if runtime.GOOS == "darwin" {

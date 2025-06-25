@@ -42,7 +42,7 @@ func (t *Terminal) setDirectory(uri string) {
 			}
 
 		}
-		err := os.Chdir(uri[off:])
+		err = os.Chdir(uri[off:])
 		if err != nil {
 			// Log the error but don't crash the application
 			log.Printf("Failed to change directory to %s: %v", uri[off:], err)
