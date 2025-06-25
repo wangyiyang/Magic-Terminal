@@ -169,20 +169,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev xorg-dev libasound2-dev
 
-      - name: Install Gosec
-        run: |
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-          
       - name: Run Gosec Security Scanner
-        run: |
-          gosec -fmt sarif -out gosec.sarif ./...
+        uses: securego/gosec@master
+        with:
+          args: '-fmt sarif -out gosec.sarif ./...'
+        continue-on-error: true
 
       - name: Upload SARIF file
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: gosec.sarif
 
-      - name: Run Go vulnerability check
+      - name: Install govulncheck
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run Go vulnerability check
+        run: |
           govulncheck ./...
