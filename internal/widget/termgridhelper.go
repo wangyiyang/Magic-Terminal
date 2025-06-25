@@ -90,56 +90,97 @@ func GetTextRange(t *TermGrid, blockMode bool, startRow, startCol, endRow, endCo
 // forRange(termGrid, true, 0, 1, 2, 3, cellFunc, rowFunc) // Iterate in block mode, applying cellFunc to cells in columns 1 to 3 and rowFunc to rows 0 to 2.
 // forRange(termGrid, false, 1, 0, 3, 2, cellFunc, rowFunc) // Iterate cell by cell, applying cellFunc to all cells and rowFunc to rows 1 and 2.
 func forRange(t *TermGrid, blockMode bool, startRow, startCol, endRow, endCol int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
-	if startRow >= len(t.Rows) || endRow < 0 {
+	// Validate and normalize parameters
+	if !t.validateAndNormalizeRange(&startRow, &startCol, &endRow, &endCol) {
 		return
 	}
-	if startRow < 0 {
-		startRow = 0
-		startCol = 0
-	}
-	if endRow >= len(t.Rows) {
-		endRow = len(t.Rows) - 1
-		endCol = len(t.Rows[endRow].Cells) - 1
-	}
 
+	// Handle single row case
 	if startRow == endRow {
-		if len(t.Rows[startRow].Cells)-1 < endCol {
-			endCol = len(t.Rows[startRow].Cells) - 1
-		}
-		for col := startCol; col <= endCol; col++ {
-			if eachCell != nil {
-				eachCell(&t.Rows[startRow].Cells[col])
-			}
-		}
+		t.processSingleRow(startRow, startCol, endCol, eachCell)
 		return
 	}
 
+	// Handle multi-row case
 	if blockMode {
-		// Iterate through the rows
-		for rowNum := startRow; rowNum <= endRow; rowNum++ {
-			row := &t.Rows[rowNum]
-			if rowNum != startRow && eachRow != nil {
-				eachRow(row)
-			}
+		t.processBlockMode(startRow, startCol, endRow, endCol, eachCell, eachRow)
+	} else {
+		t.processNonBlockMode(startRow, startCol, endRow, endCol, eachCell, eachRow)
+	}
+}
 
-			// Apply the cell function for the cells in the given column range
-			for col := startCol; col <= endCol && col < len(row.Cells); col++ {
-				if eachCell != nil {
-					eachCell(&row.Cells[col])
-				}
-			}
-		}
-		return
+// validateAndNormalizeRange validates and normalizes the range parameters
+func (t *TermGrid) validateAndNormalizeRange(startRow, startCol, endRow, endCol *int) bool {
+	if *startRow >= len(t.Rows) || *endRow < 0 {
+		return false
 	}
 
-	// first row
+	if *startRow < 0 {
+		*startRow = 0
+		*startCol = 0
+	}
+
+	if *endRow >= len(t.Rows) {
+		*endRow = len(t.Rows) - 1
+		*endCol = len(t.Rows[*endRow].Cells) - 1
+	}
+
+	return true
+}
+
+// processSingleRow handles the case where startRow and endRow are the same
+func (t *TermGrid) processSingleRow(row, startCol, endCol int, eachCell func(cell *widget.TextGridCell)) {
+	if len(t.Rows[row].Cells)-1 < endCol {
+		endCol = len(t.Rows[row].Cells) - 1
+	}
+
+	for col := startCol; col <= endCol; col++ {
+		if eachCell != nil {
+			eachCell(&t.Rows[row].Cells[col])
+		}
+	}
+}
+
+// processBlockMode handles iteration in block mode
+func (t *TermGrid) processBlockMode(startRow, startCol, endRow, endCol int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
+	for rowNum := startRow; rowNum <= endRow; rowNum++ {
+		row := &t.Rows[rowNum]
+		if rowNum != startRow && eachRow != nil {
+			eachRow(row)
+		}
+
+		// Apply the cell function for the cells in the given column range
+		for col := startCol; col <= endCol && col < len(row.Cells); col++ {
+			if eachCell != nil {
+				eachCell(&row.Cells[col])
+			}
+		}
+	}
+}
+
+// processNonBlockMode handles iteration in non-block mode
+func (t *TermGrid) processNonBlockMode(startRow, startCol, endRow, endCol int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
+	// Process first row
+	t.processFirstRow(startRow, startCol, eachCell)
+
+	// Process middle rows
+	t.processMiddleRows(startRow, endRow, eachCell, eachRow)
+
+	// Process last row
+	t.processLastRow(endRow, endCol, eachCell, eachRow)
+}
+
+// processFirstRow processes the first row in non-block mode
+func (t *TermGrid) processFirstRow(startRow, startCol int, eachCell func(cell *widget.TextGridCell)) {
 	if eachCell != nil {
 		for col := startCol; col < len(t.Rows[startRow].Cells); col++ {
 			eachCell(&t.Rows[startRow].Cells[col])
 		}
 	}
+}
 
-	// possible middle rows
+// processMiddleRows processes the middle rows in non-block mode
+func (t *TermGrid) processMiddleRows(startRow, endRow int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
 	for rowNum := startRow + 1; rowNum < endRow; rowNum++ {
 		if eachRow != nil {
 			eachRow(&t.Rows[rowNum])
@@ -150,14 +191,19 @@ func forRange(t *TermGrid, blockMode bool, startRow, startCol, endRow, endCol in
 			}
 		}
 	}
+}
 
+// processLastRow processes the last row in non-block mode
+func (t *TermGrid) processLastRow(endRow, endCol int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
 	if len(t.Rows[endRow].Cells)-1 < endCol {
 		endCol = len(t.Rows[endRow].Cells) - 1
 	}
+
 	if eachRow != nil {
 		eachRow(&t.Rows[endRow])
 	}
-	// last row
+
+	// Process last row cells
 	for col := 0; col <= endCol; col++ {
 		if eachCell != nil {
 			eachCell(&t.Rows[endRow].Cells[col])

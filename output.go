@@ -96,16 +96,15 @@ func (t *Terminal) handleOutput(buf []byte) []byte {
 	if t.hasSelectedText() {
 		t.clearSelectedText()
 	}
-	if t.state == nil {
-		t.state = &parseState{
-			esc: noEscape,
-		}
-	}
+
+	t.initializeParseState()
+
 	var (
 		size int
 		r    rune
 		i    = -1
 	)
+
 	for {
 		i++
 		buf = buf[size:]
@@ -113,61 +112,100 @@ func (t *Terminal) handleOutput(buf []byte) []byte {
 		if size == 0 {
 			break
 		}
+
 		if t.state.printing {
 			t.parsePrinting(buf, size)
 			continue
 		}
+
 		if r == utf8.RuneError && size == 1 {
 			return buf
 		}
 
-		if r == asciiEscape {
-			t.state.esc = i
-			continue
-		}
-		if t.state.esc == i-1 {
-			if cont := t.parseEscState(r); cont {
-				continue
-			}
-			t.state.esc = noEscape
-			continue
-		}
-		if t.state.apc {
-			t.parseAPC(r)
-			continue
-		}
-		if t.state.osc {
-			t.parseOSC(r)
-			continue
-		} else if t.state.vt100 != 0 {
-			t.handleVT100(string([]rune{t.state.vt100, r}))
-			t.state.vt100 = 0
-			continue
-		} else if t.state.esc != noEscape {
-			t.parseEscape(r)
+		// Handle different parsing states
+		if t.handleParsingStates(r, i) {
 			continue
 		}
 
-		if out, ok := specialChars[r]; ok {
-			if out == nil {
-				continue
-			}
-			out(t)
-		} else {
-			// check to see which charset to use
-			if t.useG1CharSet {
-				t.handleOutputChar(charSetMap[t.g1Charset](r))
-			} else {
-				t.handleOutputChar(charSetMap[t.g0Charset](r))
-			}
-		}
+		// Handle special characters and regular output
+		t.handleRegularOutput(r)
 	}
 
-	// record progress for next chunk of buffer
+	// Record progress for next chunk of buffer
+	t.updateParseStateProgress(i)
+	return buf
+}
+
+// initializeParseState initializes the parse state if needed
+func (t *Terminal) initializeParseState() {
+	if t.state == nil {
+		t.state = &parseState{
+			esc: noEscape,
+		}
+	}
+}
+
+// handleParsingStates handles different parsing states and returns true if processing should continue
+func (t *Terminal) handleParsingStates(r rune, i int) bool {
+	if r == asciiEscape {
+		t.state.esc = i
+		return true
+	}
+
+	if t.state.esc == i-1 {
+		if cont := t.parseEscState(r); cont {
+			return true
+		}
+		t.state.esc = noEscape
+		return true
+	}
+
+	if t.state.apc {
+		t.parseAPC(r)
+		return true
+	}
+
+	if t.state.osc {
+		t.parseOSC(r)
+		return true
+	}
+
+	if t.state.vt100 != 0 {
+		t.handleVT100(string([]rune{t.state.vt100, r}))
+		t.state.vt100 = 0
+		return true
+	}
+
+	if t.state.esc != noEscape {
+		t.parseEscape(r)
+		return true
+	}
+
+	return false
+}
+
+// handleRegularOutput handles special characters and regular character output
+func (t *Terminal) handleRegularOutput(r rune) {
+	if out, ok := specialChars[r]; ok {
+		if out == nil {
+			return
+		}
+		out(t)
+	} else {
+		// Check which charset to use
+		if t.useG1CharSet {
+			t.handleOutputChar(charSetMap[t.g1Charset](r))
+		} else {
+			t.handleOutputChar(charSetMap[t.g0Charset](r))
+		}
+	}
+}
+
+// updateParseStateProgress updates the parse state progress for the next buffer chunk
+func (t *Terminal) updateParseStateProgress(i int) {
 	if t.state.esc != noEscape {
 		t.state.esc = t.state.esc - i
 	}
-	return buf
 }
 
 func (t *Terminal) parseEscState(r rune) (shouldContinue bool) {

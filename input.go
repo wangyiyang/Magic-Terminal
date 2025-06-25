@@ -15,115 +15,130 @@ func (t *Terminal) TypedRune(r rune) {
 	_, _ = t.in.Write(b[:size])
 }
 
-// TypedKey will be called if a non-printable keyboard event occurs
+// keySequence represents a key sequence to be written to the terminal
+type keySequence []byte
+
+// keyHandlerMap maps key names to their corresponding byte sequences
+var keyHandlerMap = map[fyne.KeyName]keySequence{
+	fyne.KeyReturn:    {'\r'},
+	fyne.KeyTab:       {'\t'},
+	fyne.KeyF1:        {asciiEscape, 'O', 'P'},
+	fyne.KeyF2:        {asciiEscape, 'O', 'Q'},
+	fyne.KeyF3:        {asciiEscape, 'O', 'R'},
+	fyne.KeyF4:        {asciiEscape, 'O', 'S'},
+	fyne.KeyF5:        {asciiEscape, '[', '1', '5', '~'},
+	fyne.KeyF6:        {asciiEscape, '[', '1', '7', '~'},
+	fyne.KeyF7:        {asciiEscape, '[', '1', '8', '~'},
+	fyne.KeyF8:        {asciiEscape, '[', '1', '9', '~'},
+	fyne.KeyF9:        {asciiEscape, '[', '2', '0', '~'},
+	fyne.KeyF10:       {asciiEscape, '[', '2', '1', '~'},
+	fyne.KeyF11:       {asciiEscape, '[', '2', '3', '~'},
+	fyne.KeyF12:       {asciiEscape, '[', '2', '4', '~'},
+	fyne.KeyEscape:    {asciiEscape},
+	fyne.KeyBackspace: {asciiBackspace},
+	fyne.KeyDelete:    {asciiEscape, '[', '3', '~'},
+	fyne.KeyPageUp:    {asciiEscape, '[', '5', '~'},
+	fyne.KeyPageDown:  {asciiEscape, '[', '6', '~'},
+	fyne.KeyHome:      {asciiEscape, 'O', 'H'},
+	fyne.KeyInsert:    {asciiEscape, '[', '2', '~'},
+	fyne.KeyEnd:       {asciiEscape, 'O', 'F'},
+}
+
+// shiftKeyHandlerMap maps key names to their corresponding byte sequences when Shift is pressed
+var shiftKeyHandlerMap = map[fyne.KeyName]keySequence{
+	fyne.KeyF1:       {asciiEscape, '[', '2', '5', '~'},
+	fyne.KeyF2:       {asciiEscape, '[', '2', '6', '~'},
+	fyne.KeyF3:       {asciiEscape, 'O', 'R', ';', '2', '~'},
+	fyne.KeyF4:       {asciiEscape, '[', '1', ';', '2', 'S'},
+	fyne.KeyF5:       {asciiEscape, '[', '1', '5', ';', '2', '~'},
+	fyne.KeyF6:       {asciiEscape, '[', '1', '7', ';', '2', '~'},
+	fyne.KeyF7:       {asciiEscape, '[', '1', '8', ';', '2', '~'},
+	fyne.KeyF8:       {asciiEscape, '[', '1', '9', ';', '2', '~'},
+	fyne.KeyF9:       {asciiEscape, '[', '2', '0', ';', '2', '~'},
+	fyne.KeyF10:      {asciiEscape, '[', '2', '1', ';', '2', '~'},
+	fyne.KeyF11:      {asciiEscape, '[', '2', '3', ';', '2', '~'},
+	fyne.KeyF12:      {asciiEscape, '[', '2', '4', ';', '2', '~'},
+	fyne.KeyPageUp:   {asciiEscape, '[', '5', ';', '2', '~'},
+	fyne.KeyPageDown: {asciiEscape, '[', '6', ';', '2', '~'},
+	fyne.KeyHome:     {asciiEscape, '[', '1', ';', '2', 'H'},
+	fyne.KeyInsert:   {asciiEscape, '[', '2', ';', '2', '~'},
+	fyne.KeyDelete:   {asciiEscape, '[', '3', ';', '2', '~'},
+	fyne.KeyEnd:      {asciiEscape, '[', '1', ';', '2', 'F'},
+}
+
+// shiftCursorKeyMap maps cursor keys to their Shift+key sequences
+var shiftCursorKeyMap = map[fyne.KeyName]keySequence{
+	fyne.KeyUp:    {asciiEscape, '[', 'A', ';', '2'},
+	fyne.KeyDown:  {asciiEscape, '[', 'B', ';', '2'},
+	fyne.KeyLeft:  {asciiEscape, '[', 'D', ';', '2'},
+	fyne.KeyRight: {asciiEscape, '[', 'C', ';', '2'},
+}
+
 func (t *Terminal) TypedKey(e *fyne.KeyEvent) {
 	if t.keyboardState.shiftPressed {
 		t.keyTypedWithShift(e)
 		return
 	}
 
-	switch e.Name {
-	case fyne.KeyReturn:
-		_, _ = t.in.Write([]byte{'\r'})
-	case fyne.KeyEnter:
-		if t.newLineMode {
-			_, _ = t.in.Write([]byte{'\r'})
-			return
-		}
-		_, _ = t.in.Write([]byte{'\n'})
-	case fyne.KeyTab:
-		_, _ = t.in.Write([]byte{'\t'})
-	case fyne.KeyF1:
-		_, _ = t.in.Write([]byte{asciiEscape, 'O', 'P'})
-	case fyne.KeyF2:
-		_, _ = t.in.Write([]byte{asciiEscape, 'O', 'Q'})
-	case fyne.KeyF3:
-		_, _ = t.in.Write([]byte{asciiEscape, 'O', 'R'})
-	case fyne.KeyF4:
-		_, _ = t.in.Write([]byte{asciiEscape, 'O', 'S'})
-	case fyne.KeyF5:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', '5', '~'})
-	case fyne.KeyF6:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', '7', '~'})
-	case fyne.KeyF7:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', '8', '~'})
-	case fyne.KeyF8:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', '9', '~'})
-	case fyne.KeyF9:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '0', '~'})
-	case fyne.KeyF10:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '1', '~'})
-	case fyne.KeyF11:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '3', '~'})
-	case fyne.KeyF12:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '4', '~'})
-	case fyne.KeyEscape:
-		_, _ = t.in.Write([]byte{asciiEscape})
-	case fyne.KeyBackspace:
-		_, _ = t.in.Write([]byte{asciiBackspace})
-	case fyne.KeyDelete:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '3', '~'})
-	case fyne.KeyUp, fyne.KeyDown, fyne.KeyLeft, fyne.KeyRight:
+	// Handle Enter key specially based on newLineMode
+	if e.Name == fyne.KeyEnter {
+		t.handleEnterKey()
+		return
+	}
+
+	// Handle cursor keys
+	if t.isCursorKey(e.Name) {
 		t.typeCursorKey(e.Name)
-	case fyne.KeyPageUp:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '5', '~'})
-	case fyne.KeyPageDown:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '6', '~'})
-	case fyne.KeyHome:
-		_, _ = t.in.Write([]byte{asciiEscape, 'O', 'H'})
-	case fyne.KeyInsert:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '~'})
-	case fyne.KeyEnd:
-		_, _ = t.in.Write([]byte{asciiEscape, 'O', 'F'})
+		return
+	}
+
+	// Handle other keys using the map
+	t.handleMappedKey(e.Name)
+}
+
+// handleEnterKey handles the Enter key based on newLineMode
+func (t *Terminal) handleEnterKey() {
+	if t.newLineMode {
+		_, _ = t.in.Write([]byte{'\r'})
+		return
+	}
+	_, _ = t.in.Write([]byte{'\n'})
+}
+
+// isCursorKey checks if the given key is a cursor key
+func (t *Terminal) isCursorKey(key fyne.KeyName) bool {
+	return key == fyne.KeyUp || key == fyne.KeyDown || key == fyne.KeyLeft || key == fyne.KeyRight
+}
+
+// handleMappedKey handles keys that are in the keyHandlerMap
+func (t *Terminal) handleMappedKey(key fyne.KeyName) {
+	if sequence, exists := keyHandlerMap[key]; exists {
+		_, _ = t.in.Write(sequence)
 	}
 }
 
 func (t *Terminal) keyTypedWithShift(e *fyne.KeyEvent) {
-	switch e.Name {
-	case fyne.KeyF1:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '5', '~'})
-	case fyne.KeyF2:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '6', '~'})
-	case fyne.KeyF3:
-		_, _ = t.in.Write([]byte{asciiEscape, 'O', 'R', ';', '2', '~'})
-	case fyne.KeyF4:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', ';', '2', 'S'})
-	case fyne.KeyF5:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', '5', ';', '2', '~'})
-	case fyne.KeyF6:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', '7', ';', '2', '~'})
-	case fyne.KeyF7:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', '8', ';', '2', '~'})
-	case fyne.KeyF8:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', '9', ';', '2', '~'})
-	case fyne.KeyF9:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '0', ';', '2', '~'})
-	case fyne.KeyF10:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '1', ';', '2', '~'})
-	case fyne.KeyF11:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '3', ';', '2', '~'})
-	case fyne.KeyF12:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', '4', ';', '2', '~'})
-	case fyne.KeyPageUp:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '5', ';', '2', '~'})
-	case fyne.KeyPageDown:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '6', ';', '2', '~'})
-	case fyne.KeyHome:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', ';', '2', 'H'})
-	case fyne.KeyInsert:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '2', ';', '2', '~'})
-	case fyne.KeyDelete:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '3', ';', '2', '~'})
-	case fyne.KeyEnd:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', '1', ';', '2', 'F'})
-	case fyne.KeyUp:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', 'A', ';', '2'})
-	case fyne.KeyDown:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', 'B', ';', '2'})
-	case fyne.KeyLeft:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', 'D', ';', '2'})
-	case fyne.KeyRight:
-		_, _ = t.in.Write([]byte{asciiEscape, '[', 'C', ';', '2'})
+	// Handle cursor keys with Shift
+	if t.isCursorKey(e.Name) {
+		t.handleShiftCursorKey(e.Name)
+		return
+	}
+
+	// Handle other keys using the map
+	t.handleShiftMappedKey(e.Name)
+}
+
+// handleShiftCursorKey handles cursor keys when Shift is pressed
+func (t *Terminal) handleShiftCursorKey(key fyne.KeyName) {
+	if sequence, exists := shiftCursorKeyMap[key]; exists {
+		_, _ = t.in.Write(sequence)
+	}
+}
+
+// handleShiftMappedKey handles keys that are in the shiftKeyHandlerMap
+func (t *Terminal) handleShiftMappedKey(key fyne.KeyName) {
+	if sequence, exists := shiftKeyHandlerMap[key]; exists {
+		_, _ = t.in.Write(sequence)
 	}
 }
 

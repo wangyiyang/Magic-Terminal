@@ -180,39 +180,75 @@ func (t *Terminal) DoubleTapped(pe *fyne.PointEvent) {
 		t.clearSelectedText()
 	}
 
-	if row < 1 || row > len(t.content.Rows) {
+	// Validate position
+	if !t.isValidPosition(row, col) {
 		return
+	}
+
+	// Find word boundaries and select
+	t.selectWordAtPosition(row, col)
+}
+
+// isValidPosition checks if the given row and column are valid
+func (t *Terminal) isValidPosition(row, col int) bool {
+	if row < 1 || row > len(t.content.Rows) {
+		return false
 	}
 
 	rowContent := t.content.Rows[row-1].Cells
-
 	if col < 0 || col >= len(rowContent) {
-		return // No valid character under the cursor, do nothing
+		return false
 	}
 
+	return true
+}
+
+// selectWordAtPosition selects the word at the given position
+func (t *Terminal) selectWordAtPosition(row, col int) {
+	rowContent := t.content.Rows[row-1].Cells
 	start, end := col-1, col-1
 
-	if !unicode.IsLetter(rowContent[start].Rune) && !unicode.IsDigit(rowContent[start].Rune) {
+	// Check if the character under cursor is part of a word
+	if !t.isWordCharacter(rowContent[start].Rune) {
 		return
 	}
 
-	for start > 0 && (unicode.IsLetter(rowContent[start-1].Rune) || unicode.IsDigit(rowContent[start-1].Rune)) {
-		start--
-	}
-	if start < len(rowContent) && !unicode.IsLetter(rowContent[start].Rune) && !unicode.IsDigit(rowContent[start].Rune) {
-		start++
-	}
-	for end < len(rowContent) && (unicode.IsLetter(rowContent[end].Rune) || unicode.IsDigit(rowContent[end].Rune)) {
-		end++
-	}
+	// Find word boundaries
+	start = t.findWordStart(rowContent, start)
+	end = t.findWordEnd(rowContent, end)
+
 	if start == end {
 		return
 	}
 
+	// Set selection
 	t.selStart = &position{Row: row, Col: start + 1}
 	t.selEnd = &position{Row: row, Col: end}
-
 	t.highlightSelectedText()
+}
+
+// isWordCharacter checks if a rune is part of a word (letter or digit)
+func (t *Terminal) isWordCharacter(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r)
+}
+
+// findWordStart finds the start of the word containing the given position
+func (t *Terminal) findWordStart(rowContent []widget.TextGridCell, start int) int {
+	for start > 0 && t.isWordCharacter(rowContent[start-1].Rune) {
+		start--
+	}
+	if start < len(rowContent) && !t.isWordCharacter(rowContent[start].Rune) {
+		start++
+	}
+	return start
+}
+
+// findWordEnd finds the end of the word containing the given position
+func (t *Terminal) findWordEnd(rowContent []widget.TextGridCell, end int) int {
+	for end < len(rowContent) && t.isWordCharacter(rowContent[end].Rune) {
+		end++
+	}
+	return end
 }
 
 // RemoveListener de-registers a Config channel and closes it
@@ -383,63 +419,95 @@ func (t *Terminal) guessCellSize() fyne.Size {
 func (t *Terminal) run() {
 	buf := make([]byte, bufLen)
 	var leftOver []byte
+
 	for {
-		t.ioLock.RLock()
-		out := t.out
-		t.ioLock.RUnlock()
-
-		num, err := out.Read(buf)
+		num, err := t.readFromOutput(buf)
 		if err != nil {
-			t.cmdLock.RLock()
-			cmd := t.cmd
-			t.cmdLock.RUnlock()
-
-			if cmd != nil {
-				// wait for cmd (shell) to exit, populates ProcessState.ExitCode
-				err := cmd.Wait()
-				if err != nil {
-					// Log the error but don't crash the application
-					if t.debug {
-						log.Printf("Error waiting for process: %v", err)
-					}
-				}
-
-				// Update the exit code safely
-				t.cmdLock.Lock()
-				if t.cmd == cmd && cmd.ProcessState != nil {
-					t.exitCode = cmd.ProcessState.ExitCode()
-					t.hasExited = true
-				}
-				t.cmdLock.Unlock()
+			if t.handleReadError(err) {
+				break
 			}
-			if err == io.EOF || err.Error() == "EOF" {
-				break // term exit on macOS
-			} else if err, ok := err.(*os.PathError); ok &&
-				err.Err.Error() == "input/output error" || err.Err.Error() == "file already closed" {
-				break // broken pipe, terminal exit
-			}
-
-			fyne.LogError("pty read error", err)
 		}
 
-		lenLeftOver := len(leftOver)
-		fullBuf := buf
-		if lenLeftOver > 0 {
-			fullBuf = append(leftOver, buf[:num]...)
-			num += lenLeftOver
-		}
-
-		fyne.DoAndWait(func() {
-			if t.content == nil {
-				return
-			}
-
-			leftOver = t.handleOutput(fullBuf[:num])
-			if len(leftOver) == 0 {
-				t.Refresh()
-			}
-		})
+		t.processBuffer(buf, num, &leftOver)
 	}
+}
+
+// readFromOutput reads data from the terminal output
+func (t *Terminal) readFromOutput(buf []byte) (int, error) {
+	t.ioLock.RLock()
+	out := t.out
+	t.ioLock.RUnlock()
+
+	return out.Read(buf)
+}
+
+// handleReadError handles errors from reading terminal output
+// Returns true if the terminal should exit
+func (t *Terminal) handleReadError(err error) bool {
+	t.cmdLock.RLock()
+	cmd := t.cmd
+	t.cmdLock.RUnlock()
+
+	if cmd != nil {
+		t.handleCommandExit(cmd, err)
+	}
+
+	return t.shouldExitOnError(err)
+}
+
+// handleCommandExit handles the exit of the terminal command
+func (t *Terminal) handleCommandExit(cmd *exec.Cmd, readErr error) {
+	// Wait for cmd (shell) to exit, populates ProcessState.ExitCode
+	err := cmd.Wait()
+	if err != nil && t.debug {
+		log.Printf("Error waiting for process: %v", err)
+	}
+
+	// Update the exit code safely
+	t.cmdLock.Lock()
+	if t.cmd == cmd && cmd.ProcessState != nil {
+		t.exitCode = cmd.ProcessState.ExitCode()
+		t.hasExited = true
+	}
+	t.cmdLock.Unlock()
+}
+
+// shouldExitOnError determines if the terminal should exit based on the error
+func (t *Terminal) shouldExitOnError(err error) bool {
+	if err == io.EOF || err.Error() == "EOF" {
+		return true // term exit on macOS
+	}
+
+	if pathErr, ok := err.(*os.PathError); ok {
+		errMsg := pathErr.Err.Error()
+		if errMsg == "input/output error" || errMsg == "file already closed" {
+			return true // broken pipe, terminal exit
+		}
+	}
+
+	fyne.LogError("pty read error", err)
+	return false
+}
+
+// processBuffer processes the read buffer and handles output
+func (t *Terminal) processBuffer(buf []byte, num int, leftOver *[]byte) {
+	lenLeftOver := len(*leftOver)
+	fullBuf := buf
+	if lenLeftOver > 0 {
+		fullBuf = append(*leftOver, buf[:num]...)
+		num += lenLeftOver
+	}
+
+	fyne.DoAndWait(func() {
+		if t.content == nil {
+			return
+		}
+
+		*leftOver = t.handleOutput(fullBuf[:num])
+		if len(*leftOver) == 0 {
+			t.Refresh()
+		}
+	})
 }
 
 // RunLocalShell starts the terminal by loading a shell and starting to process the input/output.

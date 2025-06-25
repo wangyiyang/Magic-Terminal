@@ -41,6 +41,22 @@ var (
 	}
 )
 
+// colorModeHandler defines a function type for handling color modes
+type colorModeHandler func(*Terminal)
+
+// colorModeHandlers maps color mode values to their handler functions
+var colorModeHandlers = map[int]colorModeHandler{
+	0:  (*Terminal).resetColors,
+	1:  (*Terminal).setBold,
+	4:  (*Terminal).setItalic,
+	24: (*Terminal).setItalic,
+	5:  (*Terminal).setBlinking,
+	7:  (*Terminal).setReverse,
+	27: (*Terminal).setReverseOff,
+	39: (*Terminal).resetForeground,
+	49: (*Terminal).resetBackground,
+}
+
 func (t *Terminal) handleColorEscape(message string) {
 	if message == "" || message == "0" {
 		t.currentBG = nil
@@ -77,51 +93,89 @@ func (t *Terminal) handleColorMode(modeStr string) {
 		fyne.LogError("Failed to parse color mode: "+modeStr, err)
 		return
 	}
-	switch mode {
-	case 0:
-		t.currentBG, t.currentFG = nil, nil
-		t.bold = false
-		t.blinking = false
-	case 1:
-		t.bold = true
-	case 4, 24: //italic
-	case 5:
-		t.blinking = true
-	case 7: // reverse
-		bg, fg := t.currentBG, t.currentFG
-		if fg == nil {
-			t.currentBG = theme.Color(theme.ColorNameForeground)
-		} else {
-			t.currentBG = fg
-		}
-		if bg == nil {
-			t.currentFG = theme.Color(theme.ColorNameDisabledButton)
-		} else {
-			t.currentFG = bg
-		}
-	case 27: // reverse off
-		bg, fg := t.currentBG, t.currentFG
-		if fg != nil {
-			t.currentBG = nil
-		} else {
-			t.currentBG = fg
-		}
-		if bg != nil {
-			t.currentFG = nil
-		} else {
-			t.currentFG = bg
-		}
-	case 30, 31, 32, 33, 34, 35, 36, 37:
-		t.currentFG = basicColors[mode-30]
-	case 39:
-		t.currentFG = nil
-	case 40, 41, 42, 43, 44, 45, 46, 47:
-		t.currentBG = basicColors[mode-40]
-	case 49:
+
+	// Handle mapped color modes
+	if handler, exists := colorModeHandlers[mode]; exists {
+		handler(t)
+		return
+	}
+
+	// Handle color ranges
+	t.handleColorRanges(mode)
+}
+
+// resetColors resets all colors and styles
+func (t *Terminal) resetColors() {
+	t.currentBG, t.currentFG = nil, nil
+	t.bold = false
+	t.blinking = false
+}
+
+// setBold sets bold text style
+func (t *Terminal) setBold() {
+	t.bold = true
+}
+
+// setItalic handles italic mode (currently no-op)
+func (t *Terminal) setItalic() {
+	// italic mode - currently no-op
+}
+
+// setBlinking sets blinking text style
+func (t *Terminal) setBlinking() {
+	t.blinking = true
+}
+
+// setReverse sets reverse video mode
+func (t *Terminal) setReverse() {
+	bg, fg := t.currentBG, t.currentFG
+	if fg == nil {
+		t.currentBG = theme.Color(theme.ColorNameForeground)
+	} else {
+		t.currentBG = fg
+	}
+	if bg == nil {
+		t.currentFG = theme.Color(theme.ColorNameDisabledButton)
+	} else {
+		t.currentFG = bg
+	}
+}
+
+// setReverseOff turns off reverse video mode
+func (t *Terminal) setReverseOff() {
+	bg, fg := t.currentBG, t.currentFG
+	if fg != nil {
 		t.currentBG = nil
-	case 90, 91, 92, 93, 94, 95, 96, 97:
+	} else {
+		t.currentBG = fg
+	}
+	if bg != nil {
+		t.currentFG = nil
+	} else {
+		t.currentFG = bg
+	}
+}
+
+// resetForeground resets foreground color to default
+func (t *Terminal) resetForeground() {
+	t.currentFG = nil
+}
+
+// resetBackground resets background color to default
+func (t *Terminal) resetBackground() {
+	t.currentBG = nil
+}
+
+// handleColorRanges handles color modes that fall within specific ranges
+func (t *Terminal) handleColorRanges(mode int) {
+	switch {
+	case mode >= 30 && mode <= 37:
+		t.currentFG = basicColors[mode-30]
+	case mode >= 40 && mode <= 47:
+		t.currentBG = basicColors[mode-40]
+	case mode >= 90 && mode <= 97:
 		t.currentFG = brightColors[mode-90]
-	case 100, 101, 102, 103, 104, 105, 106, 107:
+	case mode >= 100 && mode <= 107:
 		t.currentBG = brightColors[mode-100]
 	default:
 		if t.debug {
