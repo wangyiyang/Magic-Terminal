@@ -564,7 +564,10 @@ func (t *Terminal) setupShortcuts() {
 			t.pasteText(fyne.CurrentApp().Clipboard())
 		})
 	var shortcutCopy fyne.Shortcut
-	shortcutCopy = &desktop.CustomShortcut{KeyName: fyne.KeyC, Modifier: fyne.KeyModifierShift | fyne.KeyModifierShortcutDefault}
+	shortcutCopy = &desktop.CustomShortcut{
+		KeyName:  fyne.KeyC,
+		Modifier: fyne.KeyModifierShift | fyne.KeyModifierShortcutDefault,
+	}
 	if runtime.GOOS == "darwin" {
 		shortcutCopy = &fyne.ShortcutCopy{} // we look up clipboard later
 	}

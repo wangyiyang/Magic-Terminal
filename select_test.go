@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
 	"github.com/stretchr/testify/assert"
+
 	widget2 "github.com/wangyiyang/Magic-Terminal/internal/widget"
 )
 
@@ -69,8 +70,11 @@ func TestGetSelectedRange(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			term := &Terminal{selStart: &tt.selStart, selEnd: &tt.selEnd, blockMode: tt.blockMode}
 			gotStartRow, gotStartCol, gotEndRow, gotEndCol := term.getSelectedRange()
-			if gotStartRow != tt.wantStartRow || gotStartCol != tt.wantStartCol || gotEndRow != tt.wantEndRow || gotEndCol != tt.wantEndCol {
-				t.Errorf("getSelectedRange() = (%d, %d, %d, %d), want (%d, %d, %d, %d)", gotStartRow, gotStartCol, gotEndRow, gotEndCol, tt.wantStartRow, tt.wantStartCol, tt.wantEndRow, tt.wantEndCol)
+			if gotStartRow != tt.wantStartRow || gotStartCol != tt.wantStartCol ||
+				gotEndRow != tt.wantEndRow || gotEndCol != tt.wantEndCol {
+				t.Errorf("getSelectedRange() = (%d, %d, %d, %d), want (%d, %d, %d, %d)",
+					gotStartRow, gotStartCol, gotEndRow, gotEndCol,
+					tt.wantStartRow, tt.wantStartCol, tt.wantEndRow, tt.wantEndCol)
 			}
 		})
 	}

@@ -69,27 +69,51 @@ func GetTextRange(t *TermGrid, blockMode bool, startRow, startCol, endRow, endCo
 	return string(result)
 }
 
-// forRange iterates over a range of cells and rows within a TermGrid, optionally applying a function to each cell and row.
+// forRange iterates over a range of cells and rows within a TermGrid,
+// optionally applying a function to each cell and row.
 //
 // Parameters:
-// - blockMode (bool): If true, the iteration is done in block mode, meaning it iterates through rows and applies the cell function for each cell in the specified column range.
-// - startRow (int): The starting row index for the iteration. Rows are 0-indexed.
-// - startCol (int): The starting column index for the iteration within the starting row. Columns are 0-indexed.
-// - endRow (int): The ending row index for the iteration.
-// - endCol (int): The ending column index for the iteration within the ending row.
-// - eachCell (func(cell *widget.TextGridCell)): A function that takes a pointer to a TextGridCell and is applied to each cell in the specified range. Pass `nil` if you don't want to apply a cell function.
-// - eachRow (func(row *widget.TextGridRow)): A function that takes a pointer to a TextGridRow and is applied to each row in the specified range. Pass `nil` if you don't want to apply a row function.
+//   - blockMode (bool): If true, the iteration is done in block mode, meaning
+//     it iterates through rows and applies the cell function for each cell in
+//     the specified column range.
+//   - startRow (int): The starting row index for the iteration. Rows are
+//     0-indexed.
+//   - startCol (int): The starting column index for the iteration within the
+//     starting row. Columns are 0-indexed.
+//   - endRow (int): The ending row index for the iteration.
+//   - endCol (int): The ending column index for the iteration within the
+//     ending row.
+//   - eachCell (func(cell *widget.TextGridCell)): A function that takes a
+//     pointer to a TextGridCell and is applied to each cell in the specified
+//     range. Pass `nil` if you don't want to apply a cell function.
+//   - eachRow (func(row *widget.TextGridRow)): A function that takes a
+//     pointer to a TextGridRow and is applied to each row in the specified
+//     range. Pass `nil` if you don't want to apply a row function.
 //
 // Note:
-// - If startRow or endRow are out of bounds (negative or greater/equal to the number of rows in the TextGrid), they will be adjusted to valid values.
-// - If startRow and endRow are the same, the iteration will be limited to the specified column range within that row.
-// - When blockMode is true, it iterates through rows from startRow to endRow, applying the cell function for each cell in the specified column range.
-// - When blockMode is false, it iterates through individual cells row by row, applying the cell function for each cell and optionally applying the row function for each row.
+//   - If startRow or endRow are out of bounds (negative or greater/equal to
+//     the number of rows in the TextGrid), they will be adjusted to valid
+//     values.
+//   - If startRow and endRow are the same, the iteration will be limited to
+//     the specified column range within that row.
+//   - When blockMode is true, it iterates through rows from startRow to
+//     endRow, applying the cell function for each cell in the specified
+//     column range.
+//   - When blockMode is false, it iterates through individual cells row by
+//     row, applying the cell function for each cell and optionally applying
+//     the row function for each row.
 //
 // Example Usage:
-// forRange(termGrid, true, 0, 1, 2, 3, cellFunc, rowFunc) // Iterate in block mode, applying cellFunc to cells in columns 1 to 3 and rowFunc to rows 0 to 2.
-// forRange(termGrid, false, 1, 0, 3, 2, cellFunc, rowFunc) // Iterate cell by cell, applying cellFunc to all cells and rowFunc to rows 1 and 2.
-func forRange(t *TermGrid, blockMode bool, startRow, startCol, endRow, endCol int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
+// forRange(termGrid, true, 0, 1, 2, 3, cellFunc, rowFunc)
+// // Iterate in block mode, applying cellFunc to cells in columns 1 to 3
+// // and rowFunc to rows 0 to 2.
+// forRange(termGrid, false, 1, 0, 3, 2, cellFunc, rowFunc)
+// // Iterate cell by cell, applying cellFunc to all cells and rowFunc to
+// // rows 1 and 2.
+func forRange(
+	t *TermGrid, blockMode bool, startRow, startCol, endRow, endCol int,
+	eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow),
+) {
 	// Validate and normalize parameters
 	if !t.validateAndNormalizeRange(&startRow, &startCol, &endRow, &endCol) {
 		return
@@ -142,7 +166,10 @@ func (t *TermGrid) processSingleRow(row, startCol, endCol int, eachCell func(cel
 }
 
 // processBlockMode handles iteration in block mode
-func (t *TermGrid) processBlockMode(startRow, startCol, endRow, endCol int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
+func (t *TermGrid) processBlockMode(
+	startRow, startCol, endRow, endCol int,
+	eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow),
+) {
 	for rowNum := startRow; rowNum <= endRow; rowNum++ {
 		row := &t.Rows[rowNum]
 		if rowNum != startRow && eachRow != nil {
@@ -159,7 +186,10 @@ func (t *TermGrid) processBlockMode(startRow, startCol, endRow, endCol int, each
 }
 
 // processNonBlockMode handles iteration in non-block mode
-func (t *TermGrid) processNonBlockMode(startRow, startCol, endRow, endCol int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
+func (t *TermGrid) processNonBlockMode(
+	startRow, startCol, endRow, endCol int,
+	eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow),
+) {
 	// Process first row
 	t.processFirstRow(startRow, startCol, eachCell)
 
@@ -171,7 +201,9 @@ func (t *TermGrid) processNonBlockMode(startRow, startCol, endRow, endCol int, e
 }
 
 // processFirstRow processes the first row in non-block mode
-func (t *TermGrid) processFirstRow(startRow, startCol int, eachCell func(cell *widget.TextGridCell)) {
+func (t *TermGrid) processFirstRow(
+	startRow, startCol int, eachCell func(cell *widget.TextGridCell),
+) {
 	if eachCell != nil {
 		for col := startCol; col < len(t.Rows[startRow].Cells); col++ {
 			eachCell(&t.Rows[startRow].Cells[col])
@@ -180,7 +212,10 @@ func (t *TermGrid) processFirstRow(startRow, startCol int, eachCell func(cell *w
 }
 
 // processMiddleRows processes the middle rows in non-block mode
-func (t *TermGrid) processMiddleRows(startRow, endRow int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
+func (t *TermGrid) processMiddleRows(
+	startRow, endRow int,
+	eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow),
+) {
 	for rowNum := startRow + 1; rowNum < endRow; rowNum++ {
 		if eachRow != nil {
 			eachRow(&t.Rows[rowNum])
@@ -194,7 +229,10 @@ func (t *TermGrid) processMiddleRows(startRow, endRow int, eachCell func(cell *w
 }
 
 // processLastRow processes the last row in non-block mode
-func (t *TermGrid) processLastRow(endRow, endCol int, eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow)) {
+func (t *TermGrid) processLastRow(
+	endRow, endCol int,
+	eachCell func(cell *widget.TextGridCell), eachRow func(row *widget.TextGridRow),
+) {
 	if len(t.Rows[endRow].Cells)-1 < endCol {
 		endCol = len(t.Rows[endRow].Cells) - 1
 	}

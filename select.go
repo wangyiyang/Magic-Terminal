@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"fyne.io/fyne/v2"
+
 	widget2 "github.com/wangyiyang/Magic-Terminal/internal/widget"
 )
 

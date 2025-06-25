@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
 	"github.com/stretchr/testify/assert"
+
 	widget2 "github.com/wangyiyang/Magic-Terminal/internal/widget"
 )
 

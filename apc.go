@@ -23,7 +23,7 @@ func (t *Terminal) handleAPC(code string) {
 
 	if t.debug {
 		// Handle other APC sequences or log the received APC code
-		log.Println("Unrecognised APC", code)
+		log.Println("Unrecognized APC", code)
 	}
 }
 

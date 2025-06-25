@@ -216,7 +216,7 @@ func (t *Terminal) handleColorModeMap(mode, ids string) {
 		}
 		c = &color.Gray{uint8(y)}
 	} else if t.debug {
-		log.Println("Invalid colour map ID", id)
+		log.Println("Invalid color map ID", id)
 	}
 
 	if mode == "38" {

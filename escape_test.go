@@ -100,7 +100,8 @@ func TestScrollBack_With_Zero_Back_Buffer(t *testing.T) {
 				escapeMoveCursor := "\x1b[" + strconv.Itoa(i) + ";1H" // Move cursor to row i, column 1
 				term.handleOutput([]byte(escapeMoveCursor + lineText))
 			}
-			term.handleOutput([]byte("\x1b[1;" + strconv.Itoa(tt.linesToAdd) + "r")) // Set scroll region from lines 1 to linesToAdd
+			// Set scroll region from lines 1 to linesToAdd
+			term.handleOutput([]byte("\x1b[1;" + strconv.Itoa(tt.linesToAdd) + "r"))
 
 			term.handleOutput([]byte("\x1b[" + strconv.Itoa(tt.scrollLines) + "S")) // Scroll up
 

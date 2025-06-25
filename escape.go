@@ -43,7 +43,7 @@ func (t *Terminal) handleEscape(code string) {
 	if esc, ok := escapes[runes[len(code)-1]]; ok {
 		esc(t, code[:len(code)-1])
 	} else if t.debug {
-		log.Println("Unrecognised Escape:", code)
+		log.Println("Unrecognized Escape:", code)
 	}
 }
 

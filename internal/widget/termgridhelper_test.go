@@ -39,10 +39,12 @@ func TestHighlightRange(t *testing.T) {
 					cell := &textGrid.Rows[row].Cells[col]
 					highlightedStyle, ok := cell.Style.(*TermTextGridStyle)
 					if ok != tt.wantHighlight {
-						t.Errorf("unexpected highlight status at row=%d col=%d: got %v, want %v", row, col, ok, tt.wantHighlight)
+						t.Errorf("unexpected highlight status at row=%d col=%d: got %v, want %v",
+							row, col, ok, tt.wantHighlight)
 					}
 					if ok && highlightedStyle.Highlighted != tt.wantHighlight {
-						t.Errorf("unexpected highlighted flag at row=%d col=%d: got %v, want %v", row, col, highlightedStyle.Highlighted, tt.wantHighlight)
+						t.Errorf("unexpected highlighted flag at row=%d col=%d: got %v, want %v",
+							row, col, highlightedStyle.Highlighted, tt.wantHighlight)
 					}
 				}
 			}
@@ -84,7 +86,8 @@ func TestClearHighlightRange(t *testing.T) {
 					cell := &textGrid.Rows[row].Cells[col]
 					highlightedStyle, ok := cell.Style.(*TermTextGridStyle)
 					if ok && highlightedStyle.Highlighted != tt.wantHighlight {
-						t.Errorf("unexpected highlighted flag at row=%d col=%d: got %v, want %v", row, col, highlightedStyle.Highlighted, tt.wantHighlight)
+						t.Errorf("unexpected highlighted flag at row=%d col=%d: got %v, want %v",
+							row, col, highlightedStyle.Highlighted, tt.wantHighlight)
 					}
 				}
 			}
