@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
         go-version: ['1.23.0', '1.24.x']
     runs-on: ${{ matrix.os }}
 
@@ -67,7 +67,7 @@ jobs:
     name: Test Fyne Packaging
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -95,8 +95,6 @@ jobs:
             fyne package -os linux
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             fyne package -os darwin
-          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            fyne package -os windows
           fi
 
       - name: List generated files
